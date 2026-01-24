@@ -1,0 +1,184 @@
+import { useForm } from "@tanstack/react-form";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { zodValidator } from "@tanstack/zod-form-adapter";
+import * as React from "react";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/fields";
+import { Input } from "@/components/ui/input";
+import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
+
+export const Route = createFileRoute("/signup")({
+  component: Signup,
+});
+
+const signupSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
+function Signup() {
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  const [globalError, setGlobalError] = React.useState("");
+
+  const form = useForm({
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+    },
+    validatorAdapter: zodValidator(),
+    validators: {
+      onChange: signupSchema,
+    },
+    onSubmit: async ({ value }) => {
+      setGlobalError("");
+      try {
+        const response = await api.auth.signup(
+          value.email,
+          value.password,
+          value.name
+        );
+        login(response.token, response.user);
+        navigate({ to: "/dashboard" });
+      } catch (err) {
+        setGlobalError(err instanceof Error ? err.message : "Signup failed");
+      }
+    },
+  });
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-muted px-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="mb-2 text-center font-bold text-3xl text-foreground">
+            Sign Up
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {globalError && (
+            <div className="mb-4 rounded-lg border border-destructive bg-destructive/15 px-4 py-3 text-destructive text-sm">
+              {globalError}
+            </div>
+          )}
+
+          <form
+            className="space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              form.handleSubmit();
+            }}
+          >
+            <form.Field
+              children={(field) => (
+                <Field>
+                  <FieldLabel htmlFor={field.name}>Name</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id={field.name}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="John Doe"
+                      type="text"
+                      value={field.state.value}
+                    />
+                  </FieldContent>
+                  <FieldError
+                    errors={field.state.meta.errors.map((err) => ({
+                      message: err?.message || String(err),
+                    }))}
+                  />
+                </Field>
+              )}
+              name="name"
+            />
+
+            <form.Field
+              children={(field) => (
+                <Field>
+                  <FieldLabel htmlFor={field.name}>Email</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id={field.name}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="you@example.com"
+                      type="email"
+                      value={field.state.value}
+                    />
+                  </FieldContent>
+                  <FieldError
+                    errors={field.state.meta.errors.map((err) => ({
+                      message: err?.message || String(err),
+                    }))}
+                  />
+                </Field>
+              )}
+              name="email"
+            />
+
+            <form.Field
+              children={(field) => (
+                <Field>
+                  <FieldLabel htmlFor={field.name}>Password</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id={field.name}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="••••••••"
+                      type="password"
+                      value={field.state.value}
+                    />
+                  </FieldContent>
+                  <FieldError
+                    errors={field.state.meta.errors.map((err) => ({
+                      message: err?.message || String(err),
+                    }))}
+                  />
+                </Field>
+              )}
+              name="password"
+            />
+
+            <form.Subscribe
+              children={([canSubmit, isSubmitting]) => (
+                <Button className="w-full" disabled={!canSubmit} type="submit">
+                  {isSubmitting ? "Creating account..." : "Sign Up"}
+                </Button>
+              )}
+              selector={(state) => [state.canSubmit, state.isSubmitting]}
+            />
+          </form>
+        </CardContent>
+        <CardFooter className="justify-center">
+          <p className="text-center text-muted-foreground text-sm">
+            Already have an account?{" "}
+            <Link
+              className="font-semibold text-primary hover:text-primary/80"
+              to="/login"
+            >
+              Login
+            </Link>
+          </p>
+        </CardFooter>
+      </Card>
+    </div>
+  );
+}
