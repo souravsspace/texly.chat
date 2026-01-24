@@ -1,0 +1,35 @@
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+dist/
+*.db
+*.db-shm
+*.db-wal
+coverage/
+*.out
+
+web/node_modules/
+web/build/
+web/.env
+web/.env.*
+!web/.env.example
+
+# Environment
+.env
+.env.local
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data
+data/
