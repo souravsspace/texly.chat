@@ -32,10 +32,13 @@ func (r *UserRepo) Create(user *models.User) error {
 func (r *UserRepo) GetByEmail(email string) (*models.User, error) {
 	var user models.User
 	err := r.db.Where("email = ?", email).First(&user).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
 	}
-	return &user, err
+	return &user, nil
 }
 
 /*

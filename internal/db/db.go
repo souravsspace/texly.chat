@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/souravsspace/texly.chat/internal/models"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -24,4 +25,11 @@ func Connect(path string) (*gorm.DB, error) {
 	}
 
 	return db, nil
+}
+
+/*
+* Migrate applies database migrations
+*/
+func Migrate(db *gorm.DB) error {
+	return db.AutoMigrate(&models.User{}, &models.Post{})
 }

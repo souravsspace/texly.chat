@@ -39,7 +39,11 @@ func (h *AuthHandler) Signup(c *gin.Context) {
 		return
 	}
 
-	existing, _ := h.userRepo.GetByEmail(req.Email)
+	existing, err := h.userRepo.GetByEmail(req.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "database error"})
+		return
+	}
 	if existing != nil {
 		c.JSON(http.StatusConflict, gin.H{"message": "user already exists"})
 		return

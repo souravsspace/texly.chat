@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import * as React from "react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,8 +10,9 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { api, type Post } from "@/lib/api";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/providers/auth";
+import { useDashboardStore } from "@/stores/dashboard";
+import { ModeToggle } from "@/components/mode-toggle";
 
 export const Route = createFileRoute("/dashboard")({
   component: Dashboard,
@@ -20,80 +21,44 @@ export const Route = createFileRoute("/dashboard")({
 function Dashboard() {
   const navigate = useNavigate();
   const { user, token, logout, loading: authLoading } = useAuth();
-  const [posts, setPosts] = React.useState<Post[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState("");
-  const [showForm, setShowForm] = React.useState(false);
-  const [title, setTitle] = React.useState("");
-  const [content, setContent] = React.useState("");
-  const [editingPost, setEditingPost] = React.useState<Post | null>(null);
 
-  React.useEffect(() => {
+  const {
+    posts,
+    loading,
+    error,
+    showForm,
+    title,
+    content,
+    editingPost,
+    setShowForm,
+    setTitle,
+    setContent,
+    startEdit,
+    cancelEdit,
+    fetchPosts,
+    savePost,
+    deletePost,
+  } = useDashboardStore();
+
+  useEffect(() => {
     if (!(authLoading || token)) {
       navigate({ to: "/login" });
     }
   }, [authLoading, token, navigate]);
 
-  const loadPosts = React.useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await api.posts.list();
-      setPosts(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load posts");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  React.useEffect(() => {
+  useEffect(() => {
     if (user) {
-      loadPosts();
+      fetchPosts();
     }
-  }, [user, loadPosts]);
+  }, [user, fetchPosts]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    try {
-      if (editingPost) {
-        await api.posts.update(editingPost.id, title, content);
-      } else {
-        await api.posts.create(title, content);
-      }
-
-      setTitle("");
-      setContent("");
-      setShowForm(false);
-      setEditingPost(null);
-      await loadPosts();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save post");
-    }
+    await savePost();
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Are you sure you want to delete this post?")) return;
-
-    try {
-      await api.posts.delete(id);
-      await loadPosts();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete post");
-    }
-  }
-
-  function startEdit(post: Post) {
-    setEditingPost(post);
-    setTitle(post.title);
-    setContent(post.content);
-    setShowForm(true);
-  }
-
-  function cancelEdit() {
-    setEditingPost(null);
-    setTitle("");
-    setContent("");
-    setShowForm(false);
+    await deletePost(id);
   }
 
   if (authLoading || (!user && loading)) {
@@ -114,7 +79,8 @@ function Dashboard() {
           )}
         </div>
         <div className="flex gap-3">
-          <Button asChild variant="secondary">
+          <ModeToggle/>
+          <Button variant="secondary">
             <Link to="/">Home</Link>
           </Button>
           <Button onClick={() => logout()} variant="secondary">
@@ -178,15 +144,19 @@ function Dashboard() {
         </Card>
       )}
 
-      {loading ? (
+      {loading && (
         <p className="py-12 text-center text-muted-foreground">
           Loading posts...
         </p>
-      ) : posts.length === 0 ? (
+      )}
+
+      {!loading && posts.length === 0 && (
         <p className="py-12 text-center text-muted-foreground">
           No posts yet. Create your first post!
         </p>
-      ) : (
+      )}
+
+      {!loading && posts.length > 0 && (
         <div className="space-y-4">
           {posts.map((post) => (
             <Card className="transition-shadow hover:shadow-md" key={post.id}>

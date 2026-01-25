@@ -19,6 +19,10 @@ func main() {
 		log.Fatalf("failed to connect db: %v", err)
 	}
 
+	if err := db.Migrate(gormDb); err != nil {
+		log.Fatalf("failed to migrate db: %v", err)
+	}
+
 	srv := server.New(gormDb, cfg)
 	log.Printf("🚀 Server starting on port %s\n", cfg.Port)
 	if err := srv.Run(); err != nil {

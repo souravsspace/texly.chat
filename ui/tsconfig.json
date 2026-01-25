@@ -30,7 +30,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "#api-types": ["./src/api.types.d.ts"]
+      "#api": ["src/api/index.ts"],
+      "#api-types": ["src/api/index.types.ts"]
     }
   }
 }

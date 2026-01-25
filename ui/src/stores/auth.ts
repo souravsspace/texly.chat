@@ -1,7 +1,7 @@
 import Cookies from "js-cookie";
 import { create } from "zustand";
-import type { User } from "#api-types";
-import { api } from "@/lib/api";
+import { api } from "@/api";
+import type { User } from "@/api/index.types";
 
 interface AuthState {
   user: User | null;
@@ -48,7 +48,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       try {
         const user = await api.users.getMe();
         set({ user, loading: false });
-      } catch (error) {
+      } catch (_error) {
         Cookies.remove(TOKEN_COOKIE_NAME);
         set({ token: null, user: null, loading: false });
       }

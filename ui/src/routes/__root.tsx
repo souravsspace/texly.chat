@@ -1,7 +1,8 @@
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
-import { AuthProvider } from "@/lib/auth";
+import { AuthProvider } from "@/providers/auth";
+import { ThemeProvider } from "@/providers/theme";
 import appCss from "../styles.css?url";
 
 export const Route = createRootRoute({
@@ -26,17 +27,32 @@ export const Route = createRootRoute({
     ],
   }),
 
+  notFoundComponent: NotFound,
   shellComponent: RootDocument,
 });
 
+function NotFound() {
+  return (
+    <div className="flex h-screen w-screen flex-col items-center justify-center p-4 text-center">
+      <h1 className="font-bold text-4xl">404</h1>
+      <p className="mt-2 text-lg text-muted-foreground">Page not found</p>
+      <a className="mt-4 text-primary hover:underline" href="/">
+        Go Home
+      </a>
+    </div>
+  );
+}
+
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <ThemeProvider>{children}</ThemeProvider>
+        </AuthProvider>
         <TanStackDevtools
           config={{
             position: "bottom-right",

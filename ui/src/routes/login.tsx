@@ -1,8 +1,8 @@
-import { useForm } from "@tanstack/react-form";
+import { useForm } from "@tanstack/react-form-start";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { zodValidator } from "@tanstack/zod-form-adapter";
-import * as React from "react";
+import { useState } from "react";
 import { z } from "zod";
+import { api } from "#api";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,31 +18,30 @@ import {
   FieldLabel,
 } from "@/components/ui/fields";
 import { Input } from "@/components/ui/input";
-import { api } from "@/lib/api";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/providers/auth";
 
 export const Route = createFileRoute("/login")({
   component: Login,
 });
 
 const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z.email("Invalid email address"),
   password: z.string().min(1, "Password is required"),
 });
 
 function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [globalError, setGlobalError] = React.useState("");
+
+  const [globalError, setGlobalError] = useState("");
 
   const form = useForm({
     defaultValues: {
       email: "",
       password: "",
     },
-    validatorAdapter: zodValidator(),
     validators: {
-      onChange: loginSchema,
+      onSubmit: loginSchema,
     },
     onSubmit: async ({ value }) => {
       setGlobalError("");
@@ -79,13 +78,14 @@ function Login() {
               form.handleSubmit();
             }}
           >
-            <form.Field
-              children={(field) => (
+            <form.Field name="email">
+              {(field) => (
                 <Field>
                   <FieldLabel htmlFor={field.name}>Email</FieldLabel>
                   <FieldContent>
                     <Input
                       id={field.name}
+                      name={field.name}
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
                       placeholder="you@example.com"
@@ -100,16 +100,16 @@ function Login() {
                   />
                 </Field>
               )}
-              name="email"
-            />
+            </form.Field>
 
-            <form.Field
-              children={(field) => (
+            <form.Field name="password">
+              {(field) => (
                 <Field>
                   <FieldLabel htmlFor={field.name}>Password</FieldLabel>
                   <FieldContent>
                     <Input
                       id={field.name}
+                      name={field.name}
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
                       placeholder="••••••••"
@@ -124,17 +124,17 @@ function Login() {
                   />
                 </Field>
               )}
-              name="password"
-            />
+            </form.Field>
 
             <form.Subscribe
-              children={([canSubmit, isSubmitting]) => (
+              selector={(state) => [state.canSubmit, state.isSubmitting]}
+            >
+              {([canSubmit, isSubmitting]) => (
                 <Button className="w-full" disabled={!canSubmit} type="submit">
                   {isSubmitting ? "Logging in..." : "Login"}
                 </Button>
               )}
-              selector={(state) => [state.canSubmit, state.isSubmitting]}
-            />
+            </form.Subscribe>
           </form>
         </CardContent>
         <CardFooter className="justify-center">

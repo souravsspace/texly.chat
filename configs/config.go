@@ -20,8 +20,8 @@ type Config struct {
 * Load initializes the configuration from environment variables or defaults
 */
 func Load() Config {
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found, using environment variables")
+	if err := godotenv.Load(".env.local"); err != nil {
+		log.Println("No .env.local file found, using environment variables")
 	}
 
 	dbUrl := os.Getenv("DATABASE_URL")

@@ -90,10 +90,8 @@ func (s *Server) Run() error {
 /*
 	* Serve Frontend
 	*/
-	if os.Getenv("ENVIRONMENT") != "development" {
-		if err := ui.RegisterRoutes(s.engine); err != nil {
-			fmt.Printf("Warning: Failed to register web routes: %v\n", err)
-		}
+	if err := ui.RegisterRoutes(s.engine); err != nil {
+		fmt.Printf("Warning: Failed to register web routes: %v\n", err)
 	}
 
 	addr := fmt.Sprintf(":%s", s.cfg.Port)

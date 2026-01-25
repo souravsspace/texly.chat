@@ -9,7 +9,12 @@ dev-ui:
 	@cd ui && bun dev
 
 dev-api:
-	@go run ./cmd/app
+	@if command -v air > /dev/null; then \
+		ENVIRONMENT=development air; \
+	else \
+		echo "Air not found, using go run... (Run 'go install github.com/air-verse/air@latest' for hot reload)"; \
+		ENVIRONMENT=development go run ./cmd/app; \
+	fi
 
 # Build production binary with embedded UI
 build: build-ui build-api
@@ -57,5 +62,5 @@ fmt:
 # Generate TypeScript types
 ui-types:
 	@echo "Generating Typescript types..."
-	@go run cmd/ui-types/main.go > ui/src/api.types.d.ts
-	@echo "✓ Types generated at ui/src/api.types.d.ts"
+	@go run cmd/ui-types/main.go > ui/src/api/index.types.ts
+	@echo "✓ Types generated at ui/src/api/index.types.ts"

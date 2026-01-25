@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/providers/auth";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -22,7 +22,7 @@ function Index() {
 
       {user ? (
         <div className="mb-16 flex justify-center gap-4">
-          <Button asChild className="h-auto px-8 py-3 text-lg">
+          <Button className="h-auto px-8 py-3 text-lg">
             <Link to="/dashboard">Go to Dashboard</Link>
           </Button>
           <Button
@@ -35,14 +35,10 @@ function Index() {
         </div>
       ) : (
         <div className="mb-16 flex justify-center gap-4">
-          <Button asChild className="h-auto px-8 py-3 text-lg">
+          <Button className="h-auto px-8 py-3 text-lg">
             <Link to="/login">Login</Link>
           </Button>
-          <Button
-            asChild
-            className="h-auto px-8 py-3 text-lg"
-            variant="secondary"
-          >
+          <Button className="h-auto px-8 py-3 text-lg" variant="secondary">
             <Link to="/signup">Sign Up</Link>
           </Button>
         </div>
