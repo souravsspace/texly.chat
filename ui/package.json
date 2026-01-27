@@ -11,6 +11,7 @@
     "check": "ultracite check"
   },
   "dependencies": {
+    "@base-ui-components/react": "^1.0.0-rc.0",
     "@base-ui/react": "^1.1.0",
     "@fontsource-variable/inter": "^5.2.8",
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
@@ -27,11 +28,14 @@
     "@tanstack/router-plugin": "^1.132.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
+    "input-otp": "^1.4.2",
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.563.0",
     "nitro": "latest",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "recharts": "^3.7.0",
     "shadcn": "^3.7.0",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.0.6",
