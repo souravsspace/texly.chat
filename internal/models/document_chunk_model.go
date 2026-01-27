@@ -14,7 +14,7 @@ type DocumentChunk struct {
 	ID        string    `json:"id" gorm:"primaryKey"`
 	SourceID  string    `json:"source_id" gorm:"not null;index"`
 	Content   string    `json:"content" gorm:"not null"`
-	ChunkIndex int       `json:"chunk_index"`
+	ChunkIndex int      `json:"chunk_index"`
 	CreatedAt time.Time `json:"created_at"`
 	// Embedding is stored in a virtual table for search, but we might keep it here or handle via raw SQL
 	// For sqlite-vec, we typically use a virtual table `vec_items` or similar.

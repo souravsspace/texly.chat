@@ -25,7 +25,7 @@ Allow users to create, list, update, and delete their chatbots.
 - Implement fetch wrapper for Bot endpoints.
 
 ### Step 2: Dashboard UI
-**File**: `ui/src/routes/dashboard.tsx`
+**File**: `ui/src/routes/dashboard/index.tsx`
 - Grid layout of `BotCard` components.
 - `CreateBotDialog` with form (Name, Description).
 - Use `TanStack Query` for data fetching (`useQuery(['bots'])`).

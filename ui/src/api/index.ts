@@ -1,9 +1,9 @@
 import Cookies from "js-cookie";
 import type {
   AuthResponse,
-  CreatePostRequest,
-  Post,
-  UpdatePostRequest,
+  Bot,
+  CreateBotRequest,
+  UpdateBotRequest,
   User,
 } from "@/api/index.types";
 
@@ -62,29 +62,35 @@ class ApiClient {
     getMe: () => this.request<User>("/users/me"),
   };
 
-  posts = {
-    list: () => this.request<Post[]>("/posts"),
+  bots = {
+    list: () => this.request<Bot[]>("/bots"),
 
-    get: (id: string) => this.request<Post>(`/posts/${id}`),
+    get: (id: string) => this.request<Bot>(`/bots/${id}`),
 
-    create: (title: string, content: string) => {
-      const payload: CreatePostRequest = { title, content };
-      return this.request<Post>("/posts", {
+    create: (name: string, system_prompt?: string) => {
+      const payload: CreateBotRequest = {
+        name,
+        system_prompt: system_prompt || "",
+      };
+      return this.request<Bot>("/bots", {
         method: "POST",
         body: JSON.stringify(payload),
       });
     },
 
-    update: (id: string, title: string, content: string) => {
-      const payload: UpdatePostRequest = { title, content };
-      return this.request<Post>(`/posts/${id}`, {
+    update: (id: string, name: string, system_prompt?: string) => {
+      const payload: UpdateBotRequest = {
+        name,
+        system_prompt: system_prompt || "",
+      };
+      return this.request<Bot>(`/bots/${id}`, {
         method: "PUT",
         body: JSON.stringify(payload),
       });
     },
 
     delete: (id: string) =>
-      this.request<void>(`/posts/${id}`, {
+      this.request<void>(`/bots/${id}`, {
         method: "DELETE",
       }),
   };

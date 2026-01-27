@@ -13,12 +13,12 @@ This file tracks the progress of the entire roadmap. Refer to the specific task 
     - [x] Define `DocumentChunk` Model (`internal/models/document_chunk.go`) (Vector storage)
     - [x] Run AutoMigrate & Vector Table Creation (Virtual Tables)
 
-- [ ] **1.2 Bot Management** (`02-phase1-bot_management.md`)
-    - [ ] Implement Bot Handlers (Create, List, Get, Update, Delete) (`internal/handlers/bot`)
-    - [ ] Setup API Routes & Validation
-    - [ ] Create Frontend API Client (`ui/src/api/bots.ts`)
-    - [ ] Build Dashboard UI (`ui/src/routes/dashboard.tsx`)
-    - [ ] Create CreateBotDialog Component
+- [x] **1.2 Bot Management** (`02-phase1-bot_management.md`)
+    - [x] Implement Bot Handlers (Create, List, Get, Update, Delete) (`internal/handlers/bot`)
+    - [x] Setup API Routes & Validation
+    - [x] Create Frontend API Client (`ui/src/api/index.ts`)
+    - [x] Build Dashboard UI (`ui/src/routes/dashboard/index.tsx`)
+    - [x] Create CreateBotDialog Component (`ui/src/routes/dashboard/_components/create-bot-dialog.tsx`)
 
 - [ ] **1.3 Scraping & Queue System** (`03-phase1-scraping.md`)
     - [ ] Design Job Queue Interface (In-memory/SQLite-backed) (`internal/queue`)

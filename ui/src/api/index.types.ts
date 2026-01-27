@@ -3,31 +3,43 @@
  */
 
 /*
- * Post represents a user-created post
+ * Bot represents a user's chatbot
  */
-export interface Post {
+export interface Bot {
   id: string;
   user_id: string;
-  title: string;
-  content: string;
+  name: string;
+  system_prompt: string;
   created_at: string;
   updated_at: string;
+  deleted_at: any;
 }
 
 /*
- * CreatePostRequest holds data for creating a new post
+ * CreateBotRequest holds data for creating a new bot
  */
-export interface CreatePostRequest {
-  title: string;
-  content: string;
+export interface CreateBotRequest {
+  name: string;
+  system_prompt: string;
 }
 
 /*
- * UpdatePostRequest holds data for updating an existing post
+ * UpdateBotRequest holds data for updating an existing bot
  */
-export interface UpdatePostRequest {
-  title: string;
+export interface UpdateBotRequest {
+  name: string;
+  system_prompt: string;
+}
+
+/*
+ * DocumentChunk represents a chunk of text with its vector embedding
+ */
+export interface DocumentChunk {
+  id: string;
+  source_id: string;
   content: string;
+  chunk_index: number;
+  created_at: string;
 }
 
 /*
@@ -65,3 +77,4 @@ export interface AuthResponse {
   token: string;
   user: User;
 }
+

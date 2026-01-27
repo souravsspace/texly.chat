@@ -1,11 +1,21 @@
 import { TanStackDevtools } from "@tanstack/react-devtools";
-import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { type QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  createRootRouteWithContext,
+  HeadContent,
+  Outlet,
+  Scripts,
+} from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
-import { AuthProvider } from "@/providers/auth";
-import { ThemeProvider } from "@/providers/theme";
+import { DefaultCatchBoundary } from "@/components/default-catch-boundary";
+import { NotFound } from "@/components/not-found";
+import { seo } from "@/lib/seo";
+import Providers from "@/providers";
 import appCss from "../styles.css?url";
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<{
+  queryClient: QueryClient;
+}>()({
   head: () => ({
     meta: [
       {
@@ -15,31 +25,55 @@ export const Route = createRootRoute({
         name: "viewport",
         content: "width=device-width, initial-scale=1",
       },
-      {
-        title: "TanStack Start Starter",
-      },
+      ...seo({
+        title: "Texly AI",
+        description: "Texly Ai is a AI powered platform for support messaging.",
+      }),
     ],
     links: [
+      { rel: "stylesheet", href: appCss },
       {
-        rel: "stylesheet",
-        href: appCss,
+        rel: "apple-touch-icon",
+        sizes: "180x180",
+        href: "/apple-touch-icon.png",
       },
+      {
+        rel: "icon",
+        type: "image/png",
+        sizes: "32x32",
+        href: "/favicon-32x32.png",
+      },
+      {
+        rel: "icon",
+        type: "image/png",
+        sizes: "16x16",
+        href: "/favicon-16x16.png",
+      },
+      { rel: "manifest", href: "/site.webmanifest", color: "#fffff" },
+      { rel: "icon", href: "/favicon.ico" },
     ],
   }),
-
-  notFoundComponent: NotFound,
-  shellComponent: RootDocument,
+  errorComponent: (props) => {
+    return (
+      <RootDocument>
+        <DefaultCatchBoundary {...props} />
+      </RootDocument>
+    );
+  },
+  notFoundComponent: () => <NotFound />,
+  component: RootComponent,
 });
 
-function NotFound() {
+function RootComponent() {
+  const { queryClient } = Route.useRouteContext();
   return (
-    <div className="flex h-screen w-screen flex-col items-center justify-center p-4 text-center">
-      <h1 className="font-bold text-4xl">404</h1>
-      <p className="mt-2 text-lg text-muted-foreground">Page not found</p>
-      <a className="mt-4 text-primary hover:underline" href="/">
-        Go Home
-      </a>
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <RootDocument>
+        <Providers>
+          <Outlet />
+        </Providers>
+      </RootDocument>
+    </QueryClientProvider>
   );
 }
 
@@ -50,9 +84,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <AuthProvider>
-          <ThemeProvider>{children}</ThemeProvider>
-        </AuthProvider>
+        <main className="antialiased">{children}</main>
         <TanStackDevtools
           config={{
             position: "bottom-right",

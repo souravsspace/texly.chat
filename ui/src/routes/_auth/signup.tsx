@@ -20,16 +20,17 @@ import {
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/providers/auth";
 
-export const Route = createFileRoute("/login")({
-  component: Login,
+export const Route = createFileRoute("/_auth/signup")({
+  component: Signup,
 });
 
-const loginSchema = z.object({
+const signupSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.email("Invalid email address"),
-  password: z.string().min(1, "Password is required"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
-function Login() {
+function Signup() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -37,20 +38,25 @@ function Login() {
 
   const form = useForm({
     defaultValues: {
+      name: "",
       email: "",
       password: "",
     },
     validators: {
-      onSubmit: loginSchema,
+      onSubmit: signupSchema,
     },
     onSubmit: async ({ value }) => {
       setGlobalError("");
       try {
-        const response = await api.auth.login(value.email, value.password);
+        const response = await api.auth.signup(
+          value.email,
+          value.password,
+          value.name
+        );
         login(response.token, response.user);
         navigate({ to: "/dashboard" });
       } catch (err) {
-        setGlobalError(err instanceof Error ? err.message : "Login failed");
+        setGlobalError(err instanceof Error ? err.message : "Signup failed");
       }
     },
   });
@@ -60,7 +66,7 @@ function Login() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="mb-2 text-center font-bold text-3xl text-foreground">
-            Login
+            Sign Up
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -78,6 +84,30 @@ function Login() {
               form.handleSubmit();
             }}
           >
+            <form.Field name="name">
+              {(field) => (
+                <Field>
+                  <FieldLabel htmlFor={field.name}>Name</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="John Doe"
+                      type="text"
+                      value={field.state.value}
+                    />
+                  </FieldContent>
+                  <FieldError
+                    errors={field.state.meta.errors.map((err) => ({
+                      message: err?.message || String(err),
+                    }))}
+                  />
+                </Field>
+              )}
+            </form.Field>
+
             <form.Field name="email">
               {(field) => (
                 <Field>
@@ -131,7 +161,7 @@ function Login() {
             >
               {([canSubmit, isSubmitting]) => (
                 <Button className="w-full" disabled={!canSubmit} type="submit">
-                  {isSubmitting ? "Logging in..." : "Login"}
+                  {isSubmitting ? "Creating account..." : "Sign Up"}
                 </Button>
               )}
             </form.Subscribe>
@@ -139,12 +169,12 @@ function Login() {
         </CardContent>
         <CardFooter className="justify-center">
           <p className="text-center text-muted-foreground text-sm">
-            Don't have an account?{" "}
+            Already have an account?{" "}
             <Link
               className="font-semibold text-primary hover:text-primary/80"
-              to="/signup"
+              to="/login"
             >
-              Sign up
+              Login
             </Link>
           </p>
         </CardFooter>

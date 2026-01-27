@@ -7,11 +7,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/souravsspace/texly.chat/configs"
 	"github.com/souravsspace/texly.chat/internal/handlers/auth"
-	postHandlerPkg "github.com/souravsspace/texly.chat/internal/handlers/post"
+	botHandlerPkg "github.com/souravsspace/texly.chat/internal/handlers/bot"
+
 	userHandlerPkg "github.com/souravsspace/texly.chat/internal/handlers/user"
 	"github.com/souravsspace/texly.chat/internal/middleware"
 	authMiddleware "github.com/souravsspace/texly.chat/internal/middleware/auth"
-	postRepoPkg "github.com/souravsspace/texly.chat/internal/repo/post"
+	botRepoPkg "github.com/souravsspace/texly.chat/internal/repo/bot"
+
 	userRepoPkg "github.com/souravsspace/texly.chat/internal/repo/user"
 	"github.com/souravsspace/texly.chat/ui"
 	"gorm.io/gorm"
@@ -45,14 +47,14 @@ func (s *Server) Run() error {
 	* Repositories
 	*/
 	userRepo := userRepoPkg.NewUserRepo(s.db)
-	postRepo := postRepoPkg.NewPostRepo(s.db)
+  botRepo := botRepoPkg.NewBotRepo(s.db)
 
 /*
 	* Handlers
 	*/
 	authHandler := auth.NewAuthHandler(userRepo, s.cfg)
 	userHandler := userHandlerPkg.NewUserHandler(userRepo)
-	postHandler := postHandlerPkg.NewPostHandler(postRepo)
+
 
 /*
 	* Middleware
@@ -77,14 +79,16 @@ func (s *Server) Run() error {
 		*/
 		apiGroup.GET("/users/me", authMiddleware.Auth(s.cfg), userHandler.GetMe)
 
-/*
-		* Post routes
+
+		/*
+		* Bot routes
 		*/
-		apiGroup.POST("/posts", authMiddleware.Auth(s.cfg), postHandler.CreatePost)
-		apiGroup.GET("/posts", postHandler.GetPosts)
-		apiGroup.GET("/posts/:id", postHandler.GetPost)
-		apiGroup.PUT("/posts/:id", authMiddleware.Auth(s.cfg), postHandler.UpdatePost)
-		apiGroup.DELETE("/posts/:id", authMiddleware.Auth(s.cfg), postHandler.DeletePost)
+		botHandler := botHandlerPkg.NewBotHandler(botRepo)
+		apiGroup.POST("/bots", authMiddleware.Auth(s.cfg), botHandler.CreateBot)
+		apiGroup.GET("/bots", authMiddleware.Auth(s.cfg), botHandler.ListBots)
+		apiGroup.GET("/bots/:id", authMiddleware.Auth(s.cfg), botHandler.GetBot)
+		apiGroup.PUT("/bots/:id", authMiddleware.Auth(s.cfg), botHandler.UpdateBot)
+		apiGroup.DELETE("/bots/:id", authMiddleware.Auth(s.cfg), botHandler.DeleteBot)
 	}
 
 /*

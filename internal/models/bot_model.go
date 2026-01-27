@@ -29,3 +29,19 @@ func (b *Bot) BeforeCreate(tx *gorm.DB) (err error) {
 	}
 	return
 }
+
+/*
+* CreateBotRequest holds data for creating a new bot
+ */
+type CreateBotRequest struct {
+	Name         string `json:"name" binding:"required"`
+	SystemPrompt string `json:"system_prompt"`
+}
+
+/*
+* UpdateBotRequest holds data for updating an existing bot
+ */
+type UpdateBotRequest struct {
+	Name         string `json:"name"`
+	SystemPrompt string `json:"system_prompt"`
+}

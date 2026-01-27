@@ -49,7 +49,6 @@ func Migrate(db *gorm.DB) error {
 	// 1. Standard GORM Migrations
 	err := db.AutoMigrate(
 		&models.User{},
-		&models.Post{},
 		&models.Bot{},
 		&models.DocumentChunk{},
 	)
