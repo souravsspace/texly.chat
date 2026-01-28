@@ -3,6 +3,7 @@ package configs
 import (
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/joho/godotenv"
 )
@@ -11,9 +12,15 @@ import (
 * Config holds the application configuration values
  */
 type Config struct {
-	DbUrl     string
-	Port      string
-	JwtSecret string
+	DbUrl              string
+	Port               string
+	JwtSecret          string
+	OpenAIAPIKey       string
+	EmbeddingModel     string
+	EmbeddingDimension int
+	ChatModel          string
+	ChatTemperature    float64
+	MaxContextChunks   int
 }
 
 /*
@@ -39,9 +46,48 @@ func Load() Config {
 		jwtSecret = "secret"
 	}
 
+	openAIAPIKey := os.Getenv("OPENAI_API_KEY")
+
+	embeddingModel := os.Getenv("EMBEDDING_MODEL")
+	if embeddingModel == "" {
+		embeddingModel = "text-embedding-3-small"
+	}
+
+	embeddingDimension := 1536 // Default for text-embedding-3-small
+	if dimStr := os.Getenv("EMBEDDING_DIMENSION"); dimStr != "" {
+		if dim, err := strconv.Atoi(dimStr); err == nil {
+			embeddingDimension = dim
+		}
+	}
+
+	chatModel := os.Getenv("OPENAI_CHAT_MODEL")
+	if chatModel == "" {
+		chatModel = "gpt-5-mini"
+	}
+
+	chatTemperature := 0.7
+	if tempStr := os.Getenv("CHAT_TEMPERATURE"); tempStr != "" {
+		if temp, err := strconv.ParseFloat(tempStr, 64); err == nil {
+			chatTemperature = temp
+		}
+	}
+
+	maxContextChunks := 5
+	if maxStr := os.Getenv("MAX_CONTEXT_CHUNKS"); maxStr != "" {
+		if max, err := strconv.Atoi(maxStr); err == nil {
+			maxContextChunks = max
+		}
+	}
+
 	return Config{
-		DbUrl:     dbUrl,
-		Port:      port,
-		JwtSecret: jwtSecret,
+		DbUrl:              dbUrl,
+		Port:               port,
+		JwtSecret:          jwtSecret,
+		OpenAIAPIKey:       openAIAPIKey,
+		EmbeddingModel:     embeddingModel,
+		EmbeddingDimension: embeddingDimension,
+		ChatModel:          chatModel,
+		ChatTemperature:    chatTemperature,
+		MaxContextChunks:   maxContextChunks,
 	}
 }

@@ -20,17 +20,18 @@ This file tracks the progress of the entire roadmap. Refer to the specific task 
     - [x] Build Dashboard UI (`ui/src/routes/dashboard/index.tsx`)
     - [x] Create CreateBotDialog Component (`ui/src/routes/dashboard/_components/create-bot-dialog.tsx`)
 
-- [ ] **1.3 Scraping & Queue System** (`03-phase1-scraping.md`)
-    - [ ] Design Job Queue Interface (In-memory/SQLite-backed) (`internal/queue`)
-    - [ ] Implement `Scraper` Service (`internal/services/scraper/scraper.go`)
-    - [ ] Create `ProcessSource` Worker Task (`internal/worker/tasks`)
-    - [ ] Implement Source Handler (Add URL) (`internal/handlers/source`)
-    - [ ] Build Source Management UI (Add Dialog, List)
+- [x] **1.3 Scraping & Queue System** (`03-phase1-scraping.md`)
+    - [x] Design Job Queue Interface (In-memory/SQLite-backed) (`internal/queue`)
+    - [x] Implement `Scraper` Service (`internal/services/scraper/scraper.go`)
+    - [x] Create `ProcessSource` Worker Task (`internal/worker/tasks`)
+    - [x] Implement Source Handler (Add URL) (`internal/handlers/source`)
+    - [x] Build Source Management UI (Add Dialog, List)
 
-- [ ] **1.4 Embeddings & Vector Search** (`04-phase1-embeddings.md`)
-    - [ ] Implement Embedding Service using OpenAI (`internal/services/embedding`)
-    - [ ] Create Vector Repository (`internal/repository/vector_repo.go`)
-    - [ ] Implement Vector Search Logic (Query -> Embed -> Search)
+- [x] **1.4 Embeddings & Vector Search** (`04-phase1-embeddings.md`)
+    - [x] Implement Embedding Service using OpenAI (`internal/services/embedding`)
+    - [x] Create Vector Repository (`internal/repo/vector/vector_repo.go`)
+    - [x] Implement Vector Search Service (`internal/services/vector`)
+    - [x] Integrate with scraper worker for automatic embedding generation
 
 - [ ] **1.5 Chat Interface** (`05-phase1-chat.md`)
     - [ ] Implement Chat Handler with RAG Logic (`internal/handlers/chat`)

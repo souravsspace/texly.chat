@@ -10,9 +10,9 @@ export interface Bot {
   user_id: string;
   name: string;
   system_prompt: string;
-  created_at: string;
-  updated_at: string;
-  deleted_at: any;
+  created_at: string | Date;
+  updated_at: string | Date;
+  deleted_at: string | Date | null;
 }
 
 /*
@@ -39,7 +39,34 @@ export interface DocumentChunk {
   source_id: string;
   content: string;
   chunk_index: number;
-  created_at: string;
+  created_at: string | Date;
+}
+
+/*
+ * SourceStatus represents the processing status of a source
+ */
+export type SourceStatus = string;
+
+/*
+ * Source represents a data source (URL) for a bot
+ */
+export interface Source {
+  id: string;
+  bot_id: string;
+  url: string;
+  status: SourceStatus;
+  error_message: string;
+  processed_at: string | Date | null;
+  created_at: string | Date;
+  updated_at: string | Date;
+  deleted_at: string | Date | null;
+}
+
+/*
+ * CreateSourceRequest holds data for creating a new source
+ */
+export interface CreateSourceRequest {
+  url: string;
 }
 
 /*
@@ -49,8 +76,8 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  created_at: string;
-  updated_at: string;
+  created_at: string | Date;
+  updated_at: string | Date;
 }
 
 /*

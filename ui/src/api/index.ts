@@ -3,6 +3,8 @@ import type {
   AuthResponse,
   Bot,
   CreateBotRequest,
+  CreateSourceRequest,
+  Source,
   UpdateBotRequest,
   User,
 } from "@/api/index.types";
@@ -91,6 +93,26 @@ class ApiClient {
 
     delete: (id: string) =>
       this.request<void>(`/bots/${id}`, {
+        method: "DELETE",
+      }),
+  };
+
+  sources = {
+    list: (botId: string) => this.request<Source[]>(`/bots/${botId}/sources`),
+
+    get: (botId: string, sourceId: string) =>
+      this.request<Source>(`/bots/${botId}/sources/${sourceId}`),
+
+    create: (botId: string, url: string) => {
+      const payload: CreateSourceRequest = { url };
+      return this.request<Source>(`/bots/${botId}/sources`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+    },
+
+    delete: (botId: string, sourceId: string) =>
+      this.request<void>(`/bots/${botId}/sources/${sourceId}`, {
         method: "DELETE",
       }),
   };

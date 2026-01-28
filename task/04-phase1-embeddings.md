@@ -11,7 +11,7 @@ Generate embeddings for scraped content and store them in SQLite using `sqlite-v
 - Chunk content (1000 chars, 200 overlap).
 
 ### Step 2: Vector Storage (SQLite)
-**File**: `internal/repository/vector_store.go`
+**File**: `internal/repo/vector/vector_repo.go`
 - **Insert**: Explicit SQL for `vec_items` virtual table.
 ```go
 // Example Insert

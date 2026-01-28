@@ -55,11 +55,6 @@ func main() {
 						continue
 					}
 
-					structType, ok := typeSpec.Type.(*ast.StructType)
-					if !ok {
-						continue
-					}
-
 					/*
 					 * Extract comments from GenDecl (usually where they are) or TypeSpec
 					 */
@@ -68,8 +63,17 @@ func main() {
 						doc = typeSpec.Doc
 					}
 
-					generateInterface(typeSpec.Name.Name, structType, doc)
-					fmt.Println()
+					if structType, ok := typeSpec.Type.(*ast.StructType); ok {
+						generateInterface(typeSpec.Name.Name, structType, doc)
+						fmt.Println()
+						continue
+					}
+
+					if ident, ok := typeSpec.Type.(*ast.Ident); ok {
+						generateTypeAlias(typeSpec.Name.Name, ident, doc)
+						fmt.Println()
+						continue
+					}
 				}
 			}
 		}
@@ -77,9 +81,9 @@ func main() {
 }
 
 /*
-* generateInterface outputs the TypeScript interface definition with comments
+ * printDoc outputs the JSDoc style comments
  */
-func generateInterface(name string, structType *ast.StructType, doc *ast.CommentGroup) {
+func printDoc(doc *ast.CommentGroup) {
 	if doc != nil {
 		fmt.Println("/*")
 		for _, comment := range doc.List {
@@ -91,7 +95,7 @@ func generateInterface(name string, structType *ast.StructType, doc *ast.Comment
 			text = strings.TrimPrefix(text, "/*")
 			text = strings.TrimSuffix(text, "*/")
 			text = strings.TrimSpace(text)
-			
+
 			// Remove leading asterisks if present in multi-line comments
 			text = strings.TrimPrefix(text, "*")
 			text = strings.TrimSpace(text)
@@ -102,6 +106,22 @@ func generateInterface(name string, structType *ast.StructType, doc *ast.Comment
 		}
 		fmt.Println(" */")
 	}
+}
+
+/*
+ * generateTypeAlias outputs the TypeScript type alias definition with comments
+ */
+func generateTypeAlias(name string, ident *ast.Ident, doc *ast.CommentGroup) {
+	printDoc(doc)
+	tsType := toTypeScriptType(ident)
+	fmt.Printf("export type %s = %s;\n", name, tsType)
+}
+
+/*
+ * generateInterface outputs the TypeScript interface definition with comments
+ */
+func generateInterface(name string, structType *ast.StructType, doc *ast.CommentGroup) {
+	printDoc(doc)
 
 	fmt.Printf("export interface %s {\n", name)
 
@@ -152,19 +172,32 @@ func toTypeScriptType(expr ast.Expr) string {
 		case "bool":
 			return "boolean"
 		case "Time":
-			return "string"
+			return "string | Date"
 		default:
 			return t.Name
 		}
 	case *ast.SelectorExpr:
 		if t.Sel.Name == "Time" {
-			return "string"
+			return "string | Date"
+		}
+		if t.Sel.Name == "DeletedAt" {
+			return "string | Date | null"
 		}
 		return "any"
 	case *ast.ArrayType:
-		return toTypeScriptType(t.Elt) + "[]"
+		inner := toTypeScriptType(t.Elt)
+		if strings.Contains(inner, " ") {
+			// Wrap unions in parens
+			return "(" + inner + ")[]"
+		}
+		return inner + "[]"
 	case *ast.StarExpr:
-		return toTypeScriptType(t.X)
+		inner := toTypeScriptType(t.X)
+		// Avoid double null if internal type already has it (simple check)
+		if strings.HasSuffix(inner, " | null") {
+			return inner
+		}
+		return inner + " | null"
 	default:
 		return "any"
 	}

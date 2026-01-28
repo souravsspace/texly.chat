@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { useCreateBotDialog } from "@/hooks/use-create-bot-dialog";
 import { useConfirm } from "@/providers/alert-dialog";
 import { useAuth } from "@/providers/auth";
-import { BotList } from "@/routes/dashboard/_components/bot-list";
-import { CreateBotDialog } from "@/routes/dashboard/_components/create-bot-dialog";
+import { BotList } from "@/routes/dashboard/-components/bot-list";
+import { CreateBotDialog } from "@/routes/dashboard/-components/create-bot-dialog";
 
 export const Route = createFileRoute("/dashboard/")({
   component: Dashboard,
