@@ -1,4 +1,4 @@
-.PHONY: dev build clean install dev-ui dev-api build-ui build-api
+.PHONY: dev build clean install dev-ui dev-api build-ui build-api docker-up docker-down docker-logs
 
 # Development (run both servers)
 dev:
@@ -64,3 +64,18 @@ ui-types:
 	@echo "Generating Typescript types..."
 	@go run cmd/ui-types/main.go > ui/src/api/index.types.ts
 	@echo "✓ Types generated at ui/src/api/index.types.ts"
+
+# Docker commands
+docker-up:
+	@echo "Starting Docker services..."
+	@docker-compose up -d
+	@echo "✓ Docker services started"
+	@echo "MinIO Console: http://localhost:9001 (minioadmin/minioadmin)"
+
+docker-down:
+	@echo "Stopping Docker services..."
+	@docker-compose down
+	@echo "✓ Docker services stopped"
+
+docker-logs:
+	@docker-compose logs -f

@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import type { Bot } from "@/api/index.types";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,6 +31,11 @@ export function BotCard({ bot, onDelete, isDeleting }: BotCardProps) {
           {new Date(bot.created_at).toLocaleDateString()}
         </small>
         <div className="flex gap-2">
+          <Button size="sm" variant="default">
+            <Link params={{ botId: bot.id }} to="/dashboard/bots/$botId/chat">
+              Chat
+            </Link>
+          </Button>
           <Button
             className="h-auto p-2 text-destructive hover:bg-transparent hover:text-destructive/80"
             disabled={isDeleting}

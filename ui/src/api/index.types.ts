@@ -32,6 +32,22 @@ export interface UpdateBotRequest {
 }
 
 /*
+ * ChatRequest represents an incoming chat message from the user
+ */
+export interface ChatRequest {
+  message: string;
+}
+
+/*
+ * ChatTokenResponse represents a streaming token or event in SSE format
+ */
+export interface ChatTokenResponse {
+  type: string;
+  content: string;
+  error: string;
+}
+
+/*
  * DocumentChunk represents a chunk of text with its vector embedding
  */
 export interface DocumentChunk {
@@ -43,18 +59,28 @@ export interface DocumentChunk {
 }
 
 /*
+ * SourceType represents the type of data source
+ */
+export type SourceType = string;
+
+/*
  * SourceStatus represents the processing status of a source
  */
 export type SourceStatus = string;
 
 /*
- * Source represents a data source (URL) for a bot
+ * Source represents a data source for a bot
  */
 export interface Source {
   id: string;
   bot_id: string;
+  source_type: SourceType;
   url: string;
+  file_path: string;
+  original_filename: string;
+  content_type: string;
   status: SourceStatus;
+  processing_progress: number;
   error_message: string;
   processed_at: string | Date | null;
   created_at: string | Date;
@@ -63,10 +89,18 @@ export interface Source {
 }
 
 /*
- * CreateSourceRequest holds data for creating a new source
+ * CreateSourceRequest holds data for creating a new URL source
  */
 export interface CreateSourceRequest {
   url: string;
+}
+
+/*
+ * CreateTextSourceRequest holds data for creating a text source
+ */
+export interface CreateTextSourceRequest {
+  text: string;
+  name: string;
 }
 
 /*

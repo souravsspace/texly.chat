@@ -88,3 +88,10 @@ func (r *SourceRepo) GetByBotIDAndSourceID(botID, sourceID string) (*models.Sour
 	}
 	return &source, nil
 }
+
+/*
+* UpdateProgress updates the processing progress of a source (0-100)
+ */
+func (r *SourceRepo) UpdateProgress(id string, progress int) error {
+	return r.db.Model(&models.Source{}).Where("id = ?", id).Update("processing_progress", progress).Error
+}

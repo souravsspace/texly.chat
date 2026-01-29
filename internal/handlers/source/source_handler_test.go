@@ -13,6 +13,7 @@ import (
 	"github.com/souravsspace/texly.chat/internal/queue"
 	botRepo "github.com/souravsspace/texly.chat/internal/repo/bot"
 	sourceRepo "github.com/souravsspace/texly.chat/internal/repo/source"
+	"github.com/souravsspace/texly.chat/internal/services/storage"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -31,7 +32,19 @@ func setupRouter(db *gorm.DB, jobQueue queue.JobQueue) *gin.Engine {
 	r := gin.Default()
 	sRepo := sourceRepo.NewSourceRepo(db)
 	bRepo := botRepo.NewBotRepo(db)
-	handler := source.NewSourceHandler(sRepo, bRepo, jobQueue)
+	
+	// Create a mock MinIO storage service (will fail to connect but that's OK for these tests)
+	// For URL source tests, we don't actually use storage
+	storageService, _ := storage.NewMinIOStorageService(
+		"localhost:9000",
+		"minioadmin",
+		"minioadmin",
+		"test-bucket",
+		false,
+		100,
+	)
+	
+	handler := source.NewSourceHandler(sRepo, bRepo, jobQueue, storageService, 100)
 
 	// Mock Auth middleware
 	r.Use(func(c *gin.Context) {

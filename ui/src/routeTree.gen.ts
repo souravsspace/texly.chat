@@ -14,6 +14,7 @@ import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as AuthSignupRouteImport } from './routes/_auth/signup'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as DashboardBotsBotIdSourcesRouteImport } from './routes/dashboard/bots/$botId/sources'
+import { Route as DashboardBotsBotIdChatRouteImport } from './routes/dashboard/bots/$botId.chat'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -41,12 +42,18 @@ const DashboardBotsBotIdSourcesRoute =
     path: '/dashboard/bots/$botId/sources',
     getParentRoute: () => rootRouteImport,
   } as any)
+const DashboardBotsBotIdChatRoute = DashboardBotsBotIdChatRouteImport.update({
+  id: '/dashboard/bots/$botId/chat',
+  path: '/dashboard/bots/$botId/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof AuthLoginRoute
   '/signup': typeof AuthSignupRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/bots/$botId/chat': typeof DashboardBotsBotIdChatRoute
   '/dashboard/bots/$botId/sources': typeof DashboardBotsBotIdSourcesRoute
 }
 export interface FileRoutesByTo {
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/login': typeof AuthLoginRoute
   '/signup': typeof AuthSignupRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/dashboard/bots/$botId/chat': typeof DashboardBotsBotIdChatRoute
   '/dashboard/bots/$botId/sources': typeof DashboardBotsBotIdSourcesRoute
 }
 export interface FileRoutesById {
@@ -62,6 +70,7 @@ export interface FileRoutesById {
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/signup': typeof AuthSignupRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/bots/$botId/chat': typeof DashboardBotsBotIdChatRoute
   '/dashboard/bots/$botId/sources': typeof DashboardBotsBotIdSourcesRoute
 }
 export interface FileRouteTypes {
@@ -71,6 +80,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/dashboard/'
+    | '/dashboard/bots/$botId/chat'
     | '/dashboard/bots/$botId/sources'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -78,6 +88,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/dashboard'
+    | '/dashboard/bots/$botId/chat'
     | '/dashboard/bots/$botId/sources'
   id:
     | '__root__'
@@ -85,6 +96,7 @@ export interface FileRouteTypes {
     | '/_auth/login'
     | '/_auth/signup'
     | '/dashboard/'
+    | '/dashboard/bots/$botId/chat'
     | '/dashboard/bots/$botId/sources'
   fileRoutesById: FileRoutesById
 }
@@ -93,6 +105,7 @@ export interface RootRouteChildren {
   AuthLoginRoute: typeof AuthLoginRoute
   AuthSignupRoute: typeof AuthSignupRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardBotsBotIdChatRoute: typeof DashboardBotsBotIdChatRoute
   DashboardBotsBotIdSourcesRoute: typeof DashboardBotsBotIdSourcesRoute
 }
 
@@ -133,6 +146,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardBotsBotIdSourcesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/bots/$botId/chat': {
+      id: '/dashboard/bots/$botId/chat'
+      path: '/dashboard/bots/$botId/chat'
+      fullPath: '/dashboard/bots/$botId/chat'
+      preLoaderRoute: typeof DashboardBotsBotIdChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -141,6 +161,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthLoginRoute: AuthLoginRoute,
   AuthSignupRoute: AuthSignupRoute,
   DashboardIndexRoute: DashboardIndexRoute,
+  DashboardBotsBotIdChatRoute: DashboardBotsBotIdChatRoute,
   DashboardBotsBotIdSourcesRoute: DashboardBotsBotIdSourcesRoute,
 }
 export const routeTree = rootRouteImport

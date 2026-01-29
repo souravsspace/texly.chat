@@ -91,7 +91,7 @@ function SourcesPage() {
   };
 
   const handleDelete = (sourceId: string) => {
-      deleteSourceMutation.mutate(sourceId);
+    deleteSourceMutation.mutate(sourceId);
   };
 
   if (isLoading) {

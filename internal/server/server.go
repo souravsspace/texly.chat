@@ -11,6 +11,7 @@ import (
 	"github.com/souravsspace/texly.chat/configs"
 	"github.com/souravsspace/texly.chat/internal/handlers/auth"
 	botHandlerPkg "github.com/souravsspace/texly.chat/internal/handlers/bot"
+	chatHandlerPkg "github.com/souravsspace/texly.chat/internal/handlers/chat"
 	sourceHandlerPkg "github.com/souravsspace/texly.chat/internal/handlers/source"
 	userHandlerPkg "github.com/souravsspace/texly.chat/internal/handlers/user"
 	"github.com/souravsspace/texly.chat/internal/middleware"
@@ -20,7 +21,10 @@ import (
 	sourceRepoPkg "github.com/souravsspace/texly.chat/internal/repo/source"
 	userRepoPkg "github.com/souravsspace/texly.chat/internal/repo/user"
 	vectorRepoPkg "github.com/souravsspace/texly.chat/internal/repo/vector"
+	"github.com/souravsspace/texly.chat/internal/services/chat"
 	"github.com/souravsspace/texly.chat/internal/services/embedding"
+	"github.com/souravsspace/texly.chat/internal/services/storage"
+	"github.com/souravsspace/texly.chat/internal/services/vector"
 	"github.com/souravsspace/texly.chat/internal/worker"
 	"github.com/souravsspace/texly.chat/ui"
 	"gorm.io/gorm"
@@ -68,9 +72,25 @@ func (s *Server) Run() error {
 	*/
 	jobQueue := queue.NewInMemoryQueue(100, 3) // buffer: 100, workers: 3
 	
-	// Initialize embedding service and vector repository if API key is configured
+	// Initialize MinIO storage service
+	storageService, err := storage.NewMinIOStorageService(
+		s.cfg.MinIOEndpoint,
+		s.cfg.MinIOAccessKey,
+		s.cfg.MinIOSecretKey,
+		s.cfg.MinIOBucket,
+		s.cfg.MinIOUseSSL,
+		s.cfg.MaxUploadSizeMB,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to initialize MinIO storage service: %w", err)
+	}
+	fmt.Println("✅ MinIO storage service initialized")
+	
+	// Initialize embedding service, vector search, and chat service if API key is configured
 	var embeddingService *embedding.EmbeddingService
 	var vectorRepo *vectorRepoPkg.VectorRepository
+	var searchService *vector.SearchService
+	var chatService *chat.ChatService
 	
 	if s.cfg.OpenAIAPIKey != "" {
 		embeddingService = embedding.NewEmbeddingService(
@@ -79,12 +99,23 @@ func (s *Server) Run() error {
 			s.cfg.EmbeddingDimension,
 		)
 		vectorRepo = vectorRepoPkg.NewVectorRepository(s.db)
+		searchService = vector.NewSearchService(s.db, vectorRepo, embeddingService)
+		chatService = chat.NewChatService(
+			embeddingService,
+			searchService,
+			s.cfg.ChatModel,
+			s.cfg.ChatTemperature,
+			s.cfg.MaxContextChunks,
+			s.cfg.OpenAIAPIKey,
+		)
 		fmt.Println("✅ Embedding service initialized")
+		fmt.Println("✅ Vector search service initialized")
+		fmt.Println("✅ Chat service initialized")
 	} else {
-		fmt.Println("⚠️  OpenAI API key not configured - vector embeddings disabled")
+		fmt.Println("⚠️  OpenAI API key not configured - vector embeddings and chat disabled")
 	}
 	
-	workerInstance := worker.NewWorker(s.db, embeddingService, vectorRepo)
+	workerInstance := worker.NewWorker(s.db, embeddingService, vectorRepo, storageService)
 	
 	// Start worker pool
 	jobQueue.Start(ctx, workerInstance.ProcessScrapeJob)
@@ -106,7 +137,7 @@ func (s *Server) Run() error {
 	*/
 	authHandler := auth.NewAuthHandler(userRepo, s.cfg)
 	userHandler := userHandlerPkg.NewUserHandler(userRepo)
-	sourceHandler := sourceHandlerPkg.NewSourceHandler(sourceRepo, botRepo, jobQueue)
+	sourceHandler := sourceHandlerPkg.NewSourceHandler(sourceRepo, botRepo, jobQueue, storageService, s.cfg.MaxUploadSizeMB)
 
 
 /*
@@ -146,10 +177,18 @@ func (s *Server) Run() error {
 		/*
 		* Source routes (nested under bots)
 		*/
-		apiGroup.POST("/bots/:id/sources", authMiddleware.Auth(s.cfg), sourceHandler.CreateSource)
+		apiGroup.POST("/bots/:id/sources", authMiddleware.Auth(s.cfg), sourceHandler.CreateSource)           // URL source
+		apiGroup.POST("/bots/:id/sources/upload", authMiddleware.Auth(s.cfg), sourceHandler.UploadFileSource) // File upload
+		apiGroup.POST("/bots/:id/sources/text", authMiddleware.Auth(s.cfg), sourceHandler.CreateTextSource)   // Text source
 		apiGroup.GET("/bots/:id/sources", authMiddleware.Auth(s.cfg), sourceHandler.ListSources)
 		apiGroup.GET("/bots/:id/sources/:sourceId", authMiddleware.Auth(s.cfg), sourceHandler.GetSource)
 		apiGroup.DELETE("/bots/:id/sources/:sourceId", authMiddleware.Auth(s.cfg), sourceHandler.DeleteSource)
+
+		/*
+		* Chat routes
+		*/
+		chatHandler := chatHandlerPkg.NewChatHandler(s.db, chatService)
+		apiGroup.POST("/bots/:id/chat", authMiddleware.Auth(s.cfg), chatHandler.StreamChat)
 	}
 
 /*

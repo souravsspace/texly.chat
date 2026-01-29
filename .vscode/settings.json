@@ -1,13 +1,16 @@
 {
   "cSpell.words": [
+    "AIAPI",
     "Deleter",
     "godotenv",
     "gonic",
     "gorm",
     "hashedpassword",
+    "healthcheck",
     "hugeicons",
     "joho",
     "labstack",
+    "minioadmin",
     "requets",
     "savorysspace",
     "Signup",
@@ -18,5 +21,6 @@
     "ultracite",
     "wrongpassword",
     "wrongsecret"
-  ]
+  ],
+  "makefile.configureOnOpen": false
 }

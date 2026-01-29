@@ -33,10 +33,10 @@ This file tracks the progress of the entire roadmap. Refer to the specific task 
     - [x] Implement Vector Search Service (`internal/services/vector`)
     - [x] Integrate with scraper worker for automatic embedding generation
 
-- [ ] **1.5 Chat Interface** (`05-phase1-chat.md`)
-    - [ ] Implement Chat Handler with RAG Logic (`internal/handlers/chat`)
-    - [ ] Implement Streaming Response (SSE)
-    - [ ] Build Chat UI Component (`ui/src/routes/bots/$botId/chat.tsx`)
+- [x] **1.5 Chat Interface** (`05-phase1-chat.md`)
+    - [x] Implement Chat Handler with RAG Logic (`internal/handlers/chat`)
+    - [x] Implement Streaming Response (SSE)
+    - [x] Build Chat UI Component (`ui/src/routes/bots/$botId/chat.tsx`)
 
 ## Phase 2: Growth Features
 

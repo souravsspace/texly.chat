@@ -26,13 +26,14 @@ func TestWorker_ProcessScrapeJob_Success(t *testing.T) {
 	}
 
 	db := setupTestDB()
-	worker := NewWorker(db, nil, nil) // No embedding service in tests
+	worker := NewWorker(db, nil, nil, nil) // No embedding service or storage in tests
 
 	// Create a source
 	source := &models.Source{
-		BotID:  "test-bot",
-		URL:    "https://example.com",
-		Status: models.SourceStatusPending,
+		BotID:      "test-bot",
+		SourceType: models.SourceTypeURL,
+		URL:        "https://example.com",
+		Status:     models.SourceStatusPending,
 	}
 	db.Create(source)
 
@@ -65,13 +66,14 @@ func TestWorker_ProcessScrapeJob_Success(t *testing.T) {
 
 func TestWorker_ProcessScrapeJob_InvalidURL(t *testing.T) {
 	db := setupTestDB()
-	worker := NewWorker(db, nil, nil) // No embedding service in tests
+	worker := NewWorker(db, nil, nil, nil) // No embedding service or storage in tests
 
 	// Create a source with invalid URL
 	source := &models.Source{
-		BotID:  "test-bot",
-		URL:    "not-a-valid-url",
-		Status: models.SourceStatusPending,
+		BotID:      "test-bot",
+		SourceType: models.SourceTypeURL,
+		URL:        "not-a-valid-url",
+		Status:     models.SourceStatusPending,
 	}
 	db.Create(source)
 
@@ -98,13 +100,14 @@ func TestWorker_ProcessScrapeJob_404Error(t *testing.T) {
 	}
 
 	db := setupTestDB()
-	worker := NewWorker(db, nil, nil) // No embedding service in tests
+	worker := NewWorker(db, nil, nil, nil) // No embedding service or storage in tests
 
 	// Create a source with URL that will return 404
 	source := &models.Source{
-		BotID:  "test-bot",
-		URL:    "https://httpbin.org/status/404",
-		Status: models.SourceStatusPending,
+		BotID:      "test-bot",
+		SourceType: models.SourceTypeURL,
+		URL:        "https://httpbin.org/status/404",
+		Status:     models.SourceStatusPending,
 	}
 	db.Create(source)
 
@@ -128,12 +131,13 @@ func TestWorker_ProcessScrapeJob_StatusUpdates(t *testing.T) {
 	// It's more of a unit test for the status update logic
 
 	db := setupTestDB()
-	worker := NewWorker(db, nil, nil) // No embedding service in tests
+	worker := NewWorker(db, nil, nil, nil) // No embedding service or storage in tests
 
 	source := &models.Source{
-		BotID:  "test-bot",
-		URL:    "https://example.com",
-		Status: models.SourceStatusPending,
+		BotID:      "test-bot",
+		SourceType: models.SourceTypeURL,
+		URL:        "https://example.com",
+		Status:     models.SourceStatusPending,
 	}
 	db.Create(source)
 
@@ -154,12 +158,13 @@ func TestWorker_ChunkCreation(t *testing.T) {
 	}
 
 	db := setupTestDB()
-	worker := NewWorker(db, nil, nil) // No embedding service in tests
+	worker := NewWorker(db, nil, nil, nil) // No embedding service or storage in tests
 
 	source := &models.Source{
-		BotID:  "test-bot",
-		URL:    "https://example.com",
-		Status: models.SourceStatusPending,
+		BotID:      "test-bot",
+		SourceType: models.SourceTypeURL,
+		URL:        "https://example.com",
+		Status:     models.SourceStatusPending,
 	}
 	db.Create(source)
 

@@ -21,7 +21,15 @@ type Config struct {
 	ChatModel          string
 	ChatTemperature    float64
 	MaxContextChunks   int
+	// MinIO Configuration
+	MinIOEndpoint    string
+	MinIOAccessKey   string
+	MinIOSecretKey   string
+	MinIOBucket      string
+	MinIOUseSSL      bool
+	MaxUploadSizeMB  int
 }
+
 
 /*
 * Load initializes the configuration from environment variables or defaults
@@ -46,7 +54,7 @@ func Load() Config {
 		jwtSecret = "secret"
 	}
 
-	openAIAPIKey := os.Getenv("OPENAI_API_KEY")
+	openAIAPIKey := os.Getenv("OpenAIAPIKey")
 
 	embeddingModel := os.Getenv("EMBEDDING_MODEL")
 	if embeddingModel == "" {
@@ -62,7 +70,7 @@ func Load() Config {
 
 	chatModel := os.Getenv("OPENAI_CHAT_MODEL")
 	if chatModel == "" {
-		chatModel = "gpt-5-mini"
+		chatModel = "gpt-4o-mini"
 	}
 
 	chatTemperature := 0.7
@@ -79,6 +87,39 @@ func Load() Config {
 		}
 	}
 
+	// MinIO Configuration
+	minioEndpoint := os.Getenv("MINIO_ENDPOINT")
+	if minioEndpoint == "" {
+		minioEndpoint = "localhost:9000"
+	}
+
+	minioAccessKey := os.Getenv("MINIO_ACCESS_KEY")
+	if minioAccessKey == "" {
+		minioAccessKey = "minioadmin"
+	}
+
+	minioSecretKey := os.Getenv("MINIO_SECRET_KEY")
+	if minioSecretKey == "" {
+		minioSecretKey = "minioadmin"
+	}
+
+	minioBucket := os.Getenv("MINIO_BUCKET")
+	if minioBucket == "" {
+		minioBucket = "texly-uploads"
+	}
+
+	minioUseSSL := false
+	if useSSLStr := os.Getenv("MINIO_USE_SSL"); useSSLStr == "true" {
+		minioUseSSL = true
+	}
+
+	maxUploadSizeMB := 100
+	if maxUploadStr := os.Getenv("MAX_UPLOAD_SIZE_MB"); maxUploadStr != "" {
+		if maxUpload, err := strconv.Atoi(maxUploadStr); err == nil {
+			maxUploadSizeMB = maxUpload
+		}
+	}
+
 	return Config{
 		DbUrl:              dbUrl,
 		Port:               port,
@@ -89,5 +130,11 @@ func Load() Config {
 		ChatModel:          chatModel,
 		ChatTemperature:    chatTemperature,
 		MaxContextChunks:   maxContextChunks,
+		MinIOEndpoint:      minioEndpoint,
+		MinIOAccessKey:     minioAccessKey,
+		MinIOSecretKey:     minioSecretKey,
+		MinIOBucket:        minioBucket,
+		MinIOUseSSL:        minioUseSSL,
+		MaxUploadSizeMB:    maxUploadSizeMB,
 	}
 }
