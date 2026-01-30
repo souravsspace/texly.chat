@@ -92,11 +92,11 @@ func (s *Server) Run() error {
 	var searchService *vector.SearchService
 	var chatService *chat.ChatService
 	
-	if s.cfg.OpenAIAPIKey != "" {
+	if s.cfg.OPENAI_API_KEY != "" {
 		embeddingService = embedding.NewEmbeddingService(
-			s.cfg.OpenAIAPIKey,
-			s.cfg.EmbeddingModel,
-			s.cfg.EmbeddingDimension,
+			s.cfg.OPENAI_API_KEY,
+			s.cfg.EMBEDDING_MODEL,
+			s.cfg.EMBEDDING_DIMENSION,
 		)
 		vectorRepo = vectorRepoPkg.NewVectorRepository(s.db)
 		searchService = vector.NewSearchService(s.db, vectorRepo, embeddingService)
@@ -106,7 +106,7 @@ func (s *Server) Run() error {
 			s.cfg.ChatModel,
 			s.cfg.ChatTemperature,
 			s.cfg.MaxContextChunks,
-			s.cfg.OpenAIAPIKey,
+			s.cfg.OPENAI_API_KEY,
 		)
 		fmt.Println("✅ Embedding service initialized")
 		fmt.Println("✅ Vector search service initialized")

@@ -83,28 +83,30 @@ func (s *SearchService) SearchSimilarByEmbedding(ctx context.Context, embedding 
 		distanceMap[match.ChunkID] = match.Distance
 	}
 
-	// Fetch chunk metadata and join with sources
-	var chunks []struct {
-		models.DocumentChunk
-		Source models.Source `gorm:"foreignKey:SourceID"`
-	}
+	// Fetch chunk metadata with source preloaded
+	var chunks []models.DocumentChunk
 
 	err = s.db.WithContext(ctx).
-		Table("document_chunks").
-		Select("document_chunks.*, sources.*").
-		Joins("JOIN sources ON sources.id = document_chunks.source_id").
-		Where("document_chunks.id IN ? AND sources.bot_id = ?", chunkIDs, botID).
-		Where("sources.deleted_at IS NULL").
+		Preload("Source").
+		Where("id IN ?", chunkIDs).
 		Find(&chunks).Error
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch chunk metadata: %w", err)
 	}
 
+	// Filter by bot ID and deleted_at
+	var filteredChunks []models.DocumentChunk
+	for _, chunk := range chunks {
+		if chunk.Source.BotID == botID && chunk.Source.DeletedAt.Time.IsZero() {
+			filteredChunks = append(filteredChunks, chunk)
+		}
+	}
+
 	// Build results maintaining original order by distance
-	results := make([]SearchResult, 0, len(chunks))
+	results := make([]SearchResult, 0, len(filteredChunks))
 	for _, match := range matches {
-		for _, chunk := range chunks {
+		for _, chunk := range filteredChunks {
 			if chunk.ID == match.ChunkID {
 				results = append(results, SearchResult{
 					ChunkID:      chunk.ID,

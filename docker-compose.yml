@@ -1,4 +1,51 @@
 services:
+  # Texly.Chat Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: texly-app
+    env_file:
+      - .env.prd
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - DATABASE_PATH=/app/data/prd.db
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-key-change-this-in-production}
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      # OpenAI Configuration
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-text-embedding-3-small}
+      - EMBEDDING_DIMENSION=${EMBEDDING_DIMENSION:-1536}
+      - OPENAI_CHAT_MODEL=${OPENAI_CHAT_MODEL:-gpt-4o-mini}
+      - CHAT_TEMPERATURE=${CHAT_TEMPERATURE:-1.0}
+      - MAX_CONTEXT_CHUNKS=${MAX_CONTEXT_CHUNKS:-5}
+      # MinIO Configuration
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET=texly-uploads
+      - MINIO_USE_SSL=false
+      # Upload Configuration
+      - MAX_UPLOAD_SIZE_MB=${MAX_UPLOAD_SIZE_MB:-100}
+    volumes:
+      - app-data:/app/data
+    depends_on:
+      minio:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - texly-network
+    restart: unless-stopped
+
   minio:
     image: minio/minio:latest
     container_name: texly-minio
@@ -43,6 +90,8 @@ services:
       - texly-network
 
 volumes:
+  app-data:
+    driver: local
   minio-data:
     driver: local
 

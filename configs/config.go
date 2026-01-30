@@ -15,9 +15,9 @@ type Config struct {
 	DbUrl              string
 	Port               string
 	JwtSecret          string
-	OpenAIAPIKey       string
-	EmbeddingModel     string
-	EmbeddingDimension int
+	OPENAI_API_KEY       string
+	EMBEDDING_MODEL     string
+	EMBEDDING_DIMENSION int
 	ChatModel          string
 	ChatTemperature    float64
 	MaxContextChunks   int
@@ -54,17 +54,17 @@ func Load() Config {
 		jwtSecret = "secret"
 	}
 
-	openAIAPIKey := os.Getenv("OpenAIAPIKey")
+	OPENAI_API_KEY := os.Getenv("OPENAI_API_KEY")
 
-	embeddingModel := os.Getenv("EMBEDDING_MODEL")
-	if embeddingModel == "" {
-		embeddingModel = "text-embedding-3-small"
+	EMBEDDING_MODEL := os.Getenv("EMBEDDING_MODEL")
+	if EMBEDDING_MODEL == "" {
+		EMBEDDING_MODEL = "text-embedding-3-small"
 	}
 
-	embeddingDimension := 1536 // Default for text-embedding-3-small
+	EMBEDDING_DIMENSION := 1536 // Default for text-embedding-3-small
 	if dimStr := os.Getenv("EMBEDDING_DIMENSION"); dimStr != "" {
 		if dim, err := strconv.Atoi(dimStr); err == nil {
-			embeddingDimension = dim
+			EMBEDDING_DIMENSION = dim
 		}
 	}
 
@@ -124,9 +124,9 @@ func Load() Config {
 		DbUrl:              dbUrl,
 		Port:               port,
 		JwtSecret:          jwtSecret,
-		OpenAIAPIKey:       openAIAPIKey,
-		EmbeddingModel:     embeddingModel,
-		EmbeddingDimension: embeddingDimension,
+		OPENAI_API_KEY:       OPENAI_API_KEY,
+		EMBEDDING_MODEL:     EMBEDDING_MODEL,
+		EMBEDDING_DIMENSION: EMBEDDING_DIMENSION,
 		ChatModel:          chatModel,
 		ChatTemperature:    chatTemperature,
 		MaxContextChunks:   maxContextChunks,

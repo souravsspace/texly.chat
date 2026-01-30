@@ -290,14 +290,14 @@ func (h *SourceHandler) UploadFileSource(c *gin.Context) {
 	}
 
 	// Update source with file path
-	source.FilePath = objectName
-	if err := h.sourceRepo.Create(source); err != nil {
+	if err := h.sourceRepo.UpdateFilePath(source.ID, objectName); err != nil {
 		// Cleanup MinIO file if DB update fails
 		_ = h.storageSvc.DeleteFile(ctx, objectName)
 		_ = h.sourceRepo.Delete(source.ID)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update source"})
 		return
 	}
+	source.FilePath = objectName
 
 	// Enqueue job for processing
 	job := queue.Job{
@@ -396,14 +396,14 @@ func (h *SourceHandler) CreateTextSource(c *gin.Context) {
 	}
 
 	// Update source with file path
-	source.FilePath = objectName
-	if err := h.sourceRepo.Create(source); err != nil {
+	if err := h.sourceRepo.UpdateFilePath(source.ID, objectName); err != nil {
 		// Cleanup MinIO file if DB update fails
 		_ = h.storageSvc.DeleteFile(ctx, objectName)
 		_ = h.sourceRepo.Delete(source.ID)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update source"})
 		return
 	}
+	source.FilePath = objectName
 
 	// Enqueue job for processing
 	job := queue.Job{

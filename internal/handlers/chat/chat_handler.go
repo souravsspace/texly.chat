@@ -119,14 +119,16 @@ func (h *ChatHandler) StreamChat(c *gin.Context) {
 			flusher.Flush()
 
 		case err := <-errChan:
-			// Send error
-			response := models.ChatTokenResponse{
-				Type:  "error",
-				Error: err.Error(),
+			if err != nil {
+				// Send error
+				response := models.ChatTokenResponse{
+					Type:  "error",
+					Error: err.Error(),
+				}
+				data, _ := json.Marshal(response)
+				c.Writer.Write([]byte("data: " + string(data) + "\n\n"))
+				flusher.Flush()
 			}
-			data, _ := json.Marshal(response)
-			c.Writer.Write([]byte("data: " + string(data) + "\n\n"))
-			flusher.Flush()
 			return
 		}
 	}

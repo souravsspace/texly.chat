@@ -1,0 +1,58 @@
+# Git
+.git
+.gitignore
+
+# Build artifacts
+dist/
+ui/dist/
+ui/.output/
+ui/.tanstack/
+tmp/
+coverage/
+
+# Dependencies
+ui/node_modules/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.prd
+.env.prd.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Development files
+.air.toml
+*.log
+
+# Data
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# Documentation
+README.md
+task/
+.claude/
+ui/.claude/
+ui/AGENTS.md
+
+# Testing
+*_test.go
+ui/src/**/*.test.ts
+ui/src/**/*.test.tsx
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# macOS
+.DS_Store

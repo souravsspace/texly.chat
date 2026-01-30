@@ -21,6 +21,8 @@ web/.env.*
 # Environment
 .env
 .env.local
+.env.prd
+.env.prd.*
 
 # IDE
 .idea/

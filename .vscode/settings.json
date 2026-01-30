@@ -1,7 +1,11 @@
 {
   "cSpell.words": [
+    "adduser",
     "AIAPI",
+    "appuser",
+    "coverprofile",
     "Deleter",
+    "extldflags",
     "godotenv",
     "gonic",
     "gorm",
@@ -10,7 +14,10 @@
     "hugeicons",
     "joho",
     "labstack",
+    "ldflags",
     "minioadmin",
+    "netgo",
+    "osusergo",
     "requets",
     "savorysspace",
     "Signup",
@@ -18,6 +25,7 @@
     "stretchr",
     "testsecret",
     "texly",
+    "tzdata",
     "ultracite",
     "wrongpassword",
     "wrongsecret"

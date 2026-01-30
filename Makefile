@@ -1,4 +1,4 @@
-.PHONY: dev build clean install dev-ui dev-api build-ui build-api docker-up docker-down docker-logs
+.PHONY: dev build clean install dev-ui dev-api build-ui build-api docker-up docker-down docker-logs docker-build docker-clean
 
 # Development (run both servers)
 dev:
@@ -22,7 +22,7 @@ build: build-ui build-api
 
 build-ui:
 	@echo "Building frontend..."
-	@cd ui && bun install && bun run build
+	@cd ui && NODE_OPTIONS="--max-old-space-size=4096" bun install && NODE_OPTIONS="--max-old-space-size=4096" bun run build
 	@rm -rf ui/dist
 	@mv ui/.output/public ui/dist
 
@@ -65,17 +65,32 @@ ui-types:
 	@go run cmd/ui-types/main.go > ui/src/api/index.types.ts
 	@echo "✓ Types generated at ui/src/api/index.types.ts"
 
-# Docker commands
+# Build and start full stack (MinIO + App)
 docker-up:
-	@echo "Starting Docker services..."
-	@docker-compose up -d
-	@echo "✓ Docker services started"
+	@echo "Starting full stack with Docker..."
+	@docker-compose --env-file .env.prd up -d
+	@echo "✓ Full stack running"
+	@echo "App: http://localhost:8080"
 	@echo "MinIO Console: http://localhost:9001 (minioadmin/minioadmin)"
 
+# Stop all Docker containers
 docker-down:
-	@echo "Stopping Docker services..."
-	@docker-compose down
-	@echo "✓ Docker services stopped"
+	@echo "Stopping Docker containers..."
+	@docker-compose --env-file .env.prd down
+	@echo "✓ Docker containers stopped"
 
+# View Docker logs
 docker-logs:
-	@docker-compose logs -f
+	@docker-compose --env-file .env.prd logs -f
+
+# Build Docker image only
+docker-build:
+	@echo "Building Docker image..."
+	@docker-compose --env-file .env.prd build app
+	@echo "✓ Docker image built successfully"
+
+# Clean everything (containers, volumes, images)
+docker-clean:
+	@echo "Cleaning Docker containers, images, and volumes..."
+	@docker-compose --env-file .env.prd down -v --rmi local
+	@echo "✓ Docker cleaned"

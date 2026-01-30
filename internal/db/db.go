@@ -1,17 +1,20 @@
 package db
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 	"path/filepath"
 
+	sqlite_vec "github.com/asg017/sqlite-vec-go-bindings/cgo"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/souravsspace/texly.chat/internal/models"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
 /*
-* Connect establishes a connection to the SQLite database
+* Connect establishes a connection to the SQLite database with sqlite-vec extension
  */
 func Connect(path string) (*gorm.DB, error) {
 	dir := filepath.Dir(path)
@@ -19,24 +22,35 @@ func Connect(path string) (*gorm.DB, error) {
 		return nil, fmt.Errorf("failed to create data directory: %w", err)
 	}
 
-	db, err := gorm.Open(sqlite.Open(path), &gorm.Config{})
+	// Load sqlite-vec extension before opening the database
+	sqlite_vec.Auto()
+
+	// Open raw SQL connection first to verify extension
+	sqlDB, err := sql.Open("sqlite3", path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect db: %w", err)
+		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
 
 	// Enable WAL mode for concurrency
-	if err := db.Exec("PRAGMA journal_mode=WAL;").Error; err != nil {
+	if _, err := sqlDB.Exec("PRAGMA journal_mode=WAL;"); err != nil {
+		sqlDB.Close()
 		return nil, fmt.Errorf("failed to enable WAL mode: %w", err)
 	}
 
-	// Attempt to load sqlite-vec extension
-	// Note: This relies on the extension being available in the system path or pre-loaded by the driver.
-	// Since we are using standard gorm driver, we might need to handle this more robustly in production.
-	// For now, we log if it fails but don't crash, as user might not have it installed yet.
-	if err := db.Exec("SELECT vec_version();").Error; err != nil {
-		fmt.Printf("Warning: sqlite-vec extension not loaded: %v\n", err)
-	} else {
-		fmt.Println("✅ sqlite-vec extension loaded successfully")
+	// Verify sqlite-vec extension is loaded
+	var version string
+	err = sqlDB.QueryRow("SELECT vec_version();").Scan(&version)
+	if err != nil {
+		sqlDB.Close()
+		return nil, fmt.Errorf("sqlite-vec extension not loaded: %w", err)
+	}
+	fmt.Printf("✅ sqlite-vec extension loaded successfully (version: %s)\n", version)
+
+	// Wrap with GORM
+	db, err := gorm.Open(sqlite.Dialector{Conn: sqlDB}, &gorm.Config{})
+	if err != nil {
+		sqlDB.Close()
+		return nil, fmt.Errorf("failed to connect db: %w", err)
 	}
 
 	return db, nil

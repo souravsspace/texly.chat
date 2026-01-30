@@ -126,12 +126,19 @@ func (s *ChatService) streamFromOpenAI(
 	messages []openai.ChatCompletionMessageParamUnion,
 	tokenChan chan<- string,
 ) error {
-	// Create streaming chat completion
-	stream := s.client.Chat.Completions.NewStreaming(ctx, openai.ChatCompletionNewParams{
-		Messages:    messages,
-		Model:       s.chatModel,
-		Temperature: openai.Float(s.temperature),
-	})
+	// Create streaming chat completion params
+	params := openai.ChatCompletionNewParams{
+		Messages: messages,
+		Model:    s.chatModel,
+	}
+	
+	// Only set temperature if it's not the default (1.0)
+	// Some models (like o1) don't support custom temperature
+	if s.temperature != 1.0 {
+		params.Temperature = openai.Float(s.temperature)
+	}
+	
+	stream := s.client.Chat.Completions.NewStreaming(ctx, params)
 
 	// Process the stream
 	for stream.Next() {

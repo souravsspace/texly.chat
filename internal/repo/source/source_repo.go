@@ -95,3 +95,10 @@ func (r *SourceRepo) GetByBotIDAndSourceID(botID, sourceID string) (*models.Sour
 func (r *SourceRepo) UpdateProgress(id string, progress int) error {
 	return r.db.Model(&models.Source{}).Where("id = ?", id).Update("processing_progress", progress).Error
 }
+
+/*
+* UpdateFilePath updates the file path of a source
+ */
+func (r *SourceRepo) UpdateFilePath(id string, filePath string) error {
+	return r.db.Model(&models.Source{}).Where("id = ?", id).Update("file_path", filePath).Error
+}

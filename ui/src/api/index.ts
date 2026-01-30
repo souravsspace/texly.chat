@@ -5,6 +5,7 @@ import type {
   ChatTokenResponse,
   CreateBotRequest,
   CreateSourceRequest,
+  CreateTextSourceRequest,
   Source,
   UpdateBotRequest,
   User,
@@ -107,6 +108,73 @@ class ApiClient {
     create: (botId: string, url: string) => {
       const payload: CreateSourceRequest = { url };
       return this.request<Source>(`/bots/${botId}/sources`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+    },
+
+    uploadFile: (
+      botId: string,
+      file: File,
+      onProgress?: (progress: number) => void
+    ): Promise<Source> => {
+      const token = Cookies.get("auth_token");
+      const formData = new FormData();
+      formData.append("file", file);
+
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+
+        // Track upload progress
+        if (onProgress) {
+          xhr.upload.addEventListener("progress", (e) => {
+            if (e.lengthComputable) {
+              const percentComplete = (e.loaded / e.total) * 100;
+              onProgress(Math.round(percentComplete));
+            }
+          });
+        }
+
+        xhr.addEventListener("load", () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const response = JSON.parse(xhr.responseText);
+              resolve(response);
+            } catch {
+              reject(new Error("Failed to parse response"));
+            }
+          } else {
+            try {
+              const error = JSON.parse(xhr.responseText);
+              reject(new Error(error.message || `HTTP ${xhr.status}`));
+            } catch {
+              reject(new Error(`HTTP ${xhr.status}`));
+            }
+          }
+        });
+
+        xhr.addEventListener("error", () => {
+          reject(new Error("Upload failed"));
+        });
+
+        xhr.addEventListener("abort", () => {
+          reject(new Error("Upload cancelled"));
+        });
+
+        xhr.open("POST", `${this.BASE_URL}/bots/${botId}/sources/upload`);
+        if (token) {
+          xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+        }
+        xhr.send(formData);
+      });
+    },
+
+    createText: (botId: string, text: string, name?: string) => {
+      const payload: CreateTextSourceRequest = {
+        text,
+        name: name || "",
+      };
+      return this.request<Source>(`/bots/${botId}/sources/text`, {
         method: "POST",
         body: JSON.stringify(payload),
       });

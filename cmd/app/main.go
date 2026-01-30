@@ -23,7 +23,7 @@ func main() {
 		log.Fatalf("failed to migrate db: %v", err)
 	}
 
-	if err := db.InitializeVectorTables(gormDb, cfg.EmbeddingDimension); err != nil {
+	if err := db.InitializeVectorTables(gormDb, cfg.EMBEDDING_DIMENSION); err != nil {
 		log.Printf("warning: failed to initialize vector tables: %v", err)
 	}
 
