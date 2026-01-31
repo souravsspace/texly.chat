@@ -86,7 +86,7 @@ docker-logs:
 # Build Docker image only
 docker-build:
 	@echo "Building Docker image..."
-	@docker-compose --env-file .env.prd build app
+	@docker-compose --env-file .env.prd build server
 	@echo "✓ Docker image built successfully"
 
 # Clean everything (containers, volumes, images)

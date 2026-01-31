@@ -3,6 +3,10 @@
 FROM oven/bun:1.2-alpine AS ui-builder
 
 # Set Node.js memory limit to prevent OOM errors during build
+# Install Node.js (v22+) for build stability and Vite 7 support
+RUN apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/v3.21/main nodejs
+
+# Set Node.js memory limit (increased to 4GB for heavy builds)
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 WORKDIR /app/ui
@@ -11,21 +15,31 @@ WORKDIR /app/ui
 COPY ui/package.json ui/bun.lock* ./
 
 # Install dependencies
-RUN bun install --frozen-lockfile
+# Install dependencies with cache
+RUN --mount=type=cache,target=/root/.bun/install/cache bun install --frozen-lockfile
 
 # Copy UI source code
 COPY ui/ ./
 
-# Build the UI (generates .output/public which is moved to dist)
-RUN bun run build && \
+# Build the UI using Node.js directly for better memory management
+RUN node node_modules/vite/bin/vite.js build && \
     rm -rf dist && \
     mv .output/public dist
 
 # Stage 2: Build the Go application with embedded UI
-FROM golang:1.25-alpine AS go-builder
+FROM golang:1.25-bookworm AS go-builder
 
-# Install build dependencies (required for CGO and sqlite)
-RUN apk add --no-cache gcc musl-dev sqlite-dev
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    libc6-dev \
+    libsqlite3-dev \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+
+# Enable CGO (no special flags needed for Debian/Glibc)
+ENV CGO_CFLAGS=""
 
 WORKDIR /app
 
@@ -33,7 +47,8 @@ WORKDIR /app
 COPY go.mod go.sum ./
 
 # Download Go dependencies
-RUN go mod download
+# Download Go dependencies with cache
+RUN --mount=type=cache,target=/go/pkg/mod go mod download
 
 # Copy the entire Go source code
 COPY . .
@@ -41,29 +56,29 @@ COPY . .
 # Copy built UI from previous stage
 COPY --from=ui-builder /app/ui/dist ./ui/dist
 
-# Build the Go binary with CGO enabled (required for sqlite-vec)
+# Build the Go binary with CGO enabled (dynamic link for Debian)
 # Strip symbols and debug info for smaller binary
-RUN CGO_ENABLED=1 GOOS=linux go build \
-    -ldflags="-s -w -extldflags '-static-pie'" \
-    -tags 'osusergo netgo static_build' \
+RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build CGO_ENABLED=1 GOOS=linux go build \
+    -ldflags="-s -w" \
+    -tags 'osusergo netgo' \
     -o texly.chat \
     ./cmd/app && \
     strip texly.chat
 
 # Stage 3: Create minimal runtime image
-FROM alpine:3.21
+FROM debian:bookworm-slim
 
 # Install only essential runtime dependencies
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y \
     ca-certificates \
-    sqlite-libs \
-    && rm -rf /var/cache/apk/*
+    sqlite3 \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 # Create data directory for SQLite database
 RUN mkdir -p /app/data && \
-    adduser -D -g '' appuser && \
+    useradd -m -U appuser && \
     chown -R appuser:appuser /app
 
 # Copy only the binary from builder
