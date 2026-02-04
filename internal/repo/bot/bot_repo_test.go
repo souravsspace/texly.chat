@@ -157,3 +157,30 @@ func TestBotRepo_Delete(t *testing.T) {
 	err = repo.Delete("non-existent", userID)
 	assert.Error(t, err)
 }
+
+func TestBotRepo_GetByIDPublic(t *testing.T) {
+	testDB := shared.SetupTestDB()
+	repo := NewBotRepo(testDB)
+
+	userID := "user-1"
+	bot := &models.Bot{
+		ID:           uuid.New().String(),
+		UserID:       userID,
+		Name:         "Public Test Bot",
+		SystemPrompt: "Public Prompt",
+	}
+	repo.Create(bot)
+	defer testDB.Unscoped().Delete(bot)
+
+	// Test Found (without user authentication)
+	found, err := repo.GetByIDPublic(bot.ID)
+	assert.NoError(t, err)
+	assert.NotNil(t, found)
+	assert.Equal(t, bot.Name, found.Name)
+	assert.Equal(t, bot.UserID, found.UserID)
+
+	// Test Not Found
+	notFound, err := repo.GetByIDPublic("wrong-id")
+	assert.NoError(t, err)
+	assert.Nil(t, notFound)
+}

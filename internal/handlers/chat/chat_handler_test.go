@@ -39,7 +39,7 @@ func setupTest(t *testing.T) (*gin.Engine, *ChatHandler) {
 func TestStreamChat_RequiresAuth(t *testing.T) {
 	router, handler := setupTest(t)
 
-	router.POST("/api/bots/:botId/chat", handler.StreamChat)
+	router.POST("/api/bots/:id/chat", handler.StreamChat)
 
 	reqBody := models.ChatRequest{
 		Message: "Hello",
@@ -61,7 +61,7 @@ func TestStreamChat_RequiresAuth(t *testing.T) {
 func TestStreamChat_RequiresBotID(t *testing.T) {
 	router, handler := setupTest(t)
 
-	router.POST("/api/bots/:botId/chat", func(c *gin.Context) {
+	router.POST("/api/bots/:id/chat", func(c *gin.Context) {
 		c.Set("user_id", "user-123") // Mock auth
 		handler.StreamChat(c)
 	})
@@ -87,7 +87,7 @@ func TestStreamChat_RequiresBotID(t *testing.T) {
 func TestStreamChat_ValidatesRequestBody(t *testing.T) {
 	router, handler := setupTest(t)
 
-	router.POST("/api/bots/:botId/chat", func(c *gin.Context) {
+	router.POST("/api/bots/:id/chat", func(c *gin.Context) {
 		c.Set("user_id", "user-123") // Mock auth
 		handler.StreamChat(c)
 	})
@@ -108,7 +108,7 @@ func TestStreamChat_ValidatesRequestBody(t *testing.T) {
 func TestStreamChat_RequiresMessage(t *testing.T) {
 	router, handler := setupTest(t)
 
-	router.POST("/api/bots/:botId/chat", func(c *gin.Context) {
+	router.POST("/api/bots/:id/chat", func(c *gin.Context) {
 		c.Set("user_id", "user-123") // Mock auth
 		handler.StreamChat(c)
 	})
@@ -144,7 +144,7 @@ func TestStreamChat_ValidatesBotOwnership(t *testing.T) {
 	err := botRepository.Create(bot)
 	require.NoError(t, err)
 
-	router.POST("/api/bots/:botId/chat", func(c *gin.Context) {
+	router.POST("/api/bots/:id/chat", func(c *gin.Context) {
 		c.Set("user_id", "user-123") // Different user
 		handler.StreamChat(c)
 	})
@@ -180,7 +180,7 @@ func TestStreamChat_ChatServiceUnavailable(t *testing.T) {
 	err := botRepository.Create(bot)
 	require.NoError(t, err)
 
-	router.POST("/api/bots/:botId/chat", func(c *gin.Context) {
+	router.POST("/api/bots/:id/chat", func(c *gin.Context) {
 		c.Set("user_id", "user-123")
 		handler.StreamChat(c)
 	})
@@ -206,7 +206,7 @@ func TestStreamChat_ChatServiceUnavailable(t *testing.T) {
 func TestStreamChat_BotNotFound(t *testing.T) {
 	router, handler := setupTest(t)
 
-	router.POST("/api/bots/:botId/chat", func(c *gin.Context) {
+	router.POST("/api/bots/:id/chat", func(c *gin.Context) {
 		c.Set("user_id", "user-123")
 		handler.StreamChat(c)
 	})

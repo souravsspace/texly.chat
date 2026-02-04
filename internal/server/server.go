@@ -12,6 +12,7 @@ import (
 	"github.com/souravsspace/texly.chat/internal/handlers/auth"
 	botHandlerPkg "github.com/souravsspace/texly.chat/internal/handlers/bot"
 	chatHandlerPkg "github.com/souravsspace/texly.chat/internal/handlers/chat"
+	publicHandlerPkg "github.com/souravsspace/texly.chat/internal/handlers/public"
 	sourceHandlerPkg "github.com/souravsspace/texly.chat/internal/handlers/source"
 	userHandlerPkg "github.com/souravsspace/texly.chat/internal/handlers/user"
 	"github.com/souravsspace/texly.chat/internal/middleware"
@@ -23,10 +24,12 @@ import (
 	vectorRepoPkg "github.com/souravsspace/texly.chat/internal/repo/vector"
 	"github.com/souravsspace/texly.chat/internal/services/chat"
 	"github.com/souravsspace/texly.chat/internal/services/embedding"
+	"github.com/souravsspace/texly.chat/internal/services/session"
 	"github.com/souravsspace/texly.chat/internal/services/storage"
 	"github.com/souravsspace/texly.chat/internal/services/vector"
 	"github.com/souravsspace/texly.chat/internal/worker"
 	"github.com/souravsspace/texly.chat/ui"
+	"github.com/souravsspace/texly.chat/widget"
 	"gorm.io/gorm"
 )
 
@@ -191,11 +194,37 @@ func (s *Server) Run() error {
 		apiGroup.POST("/bots/:id/chat", authMiddleware.Auth(s.cfg), chatHandler.StreamChat)
 	}
 
+	/*
+	* Public API routes for widget
+	*/
+	sessionService := session.NewSessionService()
+	publicHandler := publicHandlerPkg.NewPublicHandler(botRepo, sessionService, chatService)
+	
+	publicGroup := s.engine.Group("/api/public")
+	publicGroup.Use(middleware.WidgetCORS(botRepo))
+	{
+		// Widget configuration
+		publicGroup.GET("/bots/:id/config", publicHandler.GetWidgetConfig)
+		
+		// Session management
+		publicGroup.POST("/chats", publicHandler.CreateSession)
+		
+		// Chat streaming
+		publicGroup.POST("/chats/:session_id/messages", publicHandler.StreamChatPublic)
+	}
+
 /*
 	* Serve Frontend
 	*/
 	if err := ui.RegisterRoutes(s.engine); err != nil {
 		fmt.Printf("Warning: Failed to register web routes: %v\n", err)
+	}
+
+	/*
+	* Serve Widget
+	*/
+	if err := widget.RegisterRoutes(s.engine); err != nil {
+		fmt.Printf("Warning: Failed to register widget routes: %v\n", err)
 	}
 
 	addr := fmt.Sprintf(":%s", s.cfg.Port)

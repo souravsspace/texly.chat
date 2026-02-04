@@ -1,4 +1,4 @@
-.PHONY: dev build clean install dev-ui dev-api build-ui build-api docker-up docker-down docker-logs docker-build docker-clean
+.PHONY: dev build clean install dev-ui dev-api build-ui build-widget build-api docker-up docker-down docker-logs docker-build docker-clean
 
 # Development (run both servers)
 dev:
@@ -17,8 +17,12 @@ dev-api:
 	fi
 
 # Build production binary with embedded UI
-build: build-ui build-api
+build: build-widget build-ui build-api
 	@echo "✓ Build complete! Binary at: dist/texly.chat"
+
+build-widget:
+	@echo "Building widget..."
+	@cd widget && bun install && bun run build
 
 build-ui:
 	@echo "Building frontend..."
@@ -40,7 +44,7 @@ install:
 # Clean build artifacts
 clean:
 	@echo "Cleaning build artifacts..."
-	@rm -rf dist/ ui/dist/ ui/.output/
+	@rm -rf dist/ ui/dist/ ui/.output/ widget/dist/
 	@echo "✓ Cleaned"
 
 # Run tests

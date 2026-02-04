@@ -72,3 +72,19 @@ func (r *BotRepo) Delete(id string, userID string) error {
 	}
 	return nil
 }
+
+/*
+* GetByIDPublic retrieves a bot by its ID without user authentication
+* Used for public widget access and CORS validation
+*/
+func (r *BotRepo) GetByIDPublic(id string) (*models.Bot, error) {
+	var bot models.Bot
+	err := r.db.Where("id = ?", id).First(&bot).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &bot, nil
+}

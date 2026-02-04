@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -36,6 +37,26 @@ func (h *BotHandler) CreateBot(c *gin.Context) {
 		UserID:       userID,
 		Name:         req.Name,
 		SystemPrompt: req.SystemPrompt,
+	}
+
+	// Marshal AllowedOrigins to JSON if provided
+	if len(req.AllowedOrigins) > 0 {
+		allowedOriginsJSON, err := json.Marshal(req.AllowedOrigins)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid allowed origins"})
+			return
+		}
+		bot.AllowedOrigins = string(allowedOriginsJSON)
+	}
+
+	// Marshal WidgetConfig to JSON if provided
+	if req.WidgetConfig != nil {
+		widgetConfigJSON, err := json.Marshal(req.WidgetConfig)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid widget config"})
+			return
+		}
+		bot.WidgetConfig = string(widgetConfigJSON)
 	}
 
 	if err := h.repo.Create(&bot); err != nil {
@@ -111,6 +132,26 @@ func (h *BotHandler) UpdateBot(c *gin.Context) {
 	// But struct zero value check is tricky.
 	// Let's assume we update if needed. Alternatively map fields.
 	bot.SystemPrompt = req.SystemPrompt
+
+	// Update AllowedOrigins if provided
+	if len(req.AllowedOrigins) > 0 {
+		allowedOriginsJSON, err := json.Marshal(req.AllowedOrigins)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid allowed origins"})
+			return
+		}
+		bot.AllowedOrigins = string(allowedOriginsJSON)
+	}
+
+	// Update WidgetConfig if provided
+	if req.WidgetConfig != nil {
+		widgetConfigJSON, err := json.Marshal(req.WidgetConfig)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid widget config"})
+			return
+		}
+		bot.WidgetConfig = string(widgetConfigJSON)
+	}
 
 	if err := h.repo.Update(bot); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to update bot"})

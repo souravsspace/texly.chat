@@ -40,17 +40,17 @@ This file tracks the progress of the entire roadmap. Refer to the specific task 
 
 ## Phase 2: Growth Features
 
-- [ ] **2.1 Widget Backend & API** (`06_phase2_widget_backend.md`)
-    - [ ] Update Bot Model (AllowedOrigins, Config)
-    - [ ] Implement Public Config Endpoint
-    - [ ] Implement Public Chat & Streaming Routes
-    - [ ] Add CORS/Security Middleware
+- [/] **2.1 Widget Backend & API** (`06_phase2_widget_backend.md`)
+    - [x] Update Bot Model (AllowedOrigins, Config)
+    - [x] Implement Public Config Endpoint
+    - [x] Implement Public Chat & Streaming Routes
+    - [x] Add CORS/Security Middleware
 
-- [ ] **2.2 Widget Client (React)** (`07_phase2_widget_client.md`)
-    - [ ] Setup Widget Project (Vite/ShadowDOM)
-    - [ ] Implement Chat UI (Launcher, Window)
-    - [ ] Implement State & API Client
-    - [ ] Build Embed Script loader
+- [x] **2.2 Widget Client (React)** (`07_phase2_widget_client.md`)
+    - [x] Setup Widget Project (Vite/ShadowDOM)
+    - [x] Implement Chat UI (Launcher, Window)
+    - [x] Implement State & API Client
+    - [x] Build Embed Script loader
 
 - [ ] **2.3 Widget Dashboard** (`08_phase2_widget_dashboard.md`)
     - [ ] Build Configuration Form (Theme, Origins)

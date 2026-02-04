@@ -129,3 +129,82 @@ func TestDeleteBot(t *testing.T) {
 	db.Model(&models.Bot{}).Where("id = ?", botInstance.ID).Count(&count)
 	assert.Equal(t, int64(0), count)
 }
+
+func TestCreateBot_WithWidgetConfig(t *testing.T) {
+	db := setupTestDB()
+	r := setupRouter(db)
+
+	widgetConfig := &models.WidgetConfig{
+		ThemeColor:     "#ff5733",
+		InitialMessage: "Welcome to our bot!",
+		Position:       "bottom-left",
+		BotAvatar:      "https://example.com/avatar.png",
+	}
+
+	reqBody := models.CreateBotRequest{
+		Name:           "Widget Bot",
+		SystemPrompt:   "You are a helpful assistant",
+		AllowedOrigins: []string{"https://example.com", "https://app.example.com"},
+		WidgetConfig:   widgetConfig,
+	}
+	jsonValue, _ := json.Marshal(reqBody)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/api/bots", bytes.NewBuffer(jsonValue))
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusCreated, w.Code)
+
+	var createdBot models.Bot
+	json.Unmarshal(w.Body.Bytes(), &createdBot)
+	assert.Equal(t, "Widget Bot", createdBot.Name)
+	assert.NotEmpty(t, createdBot.AllowedOrigins)
+	assert.NotEmpty(t, createdBot.WidgetConfig)
+
+	// Verify JSON parsing
+	var allowedOrigins []string
+	json.Unmarshal([]byte(createdBot.AllowedOrigins), &allowedOrigins)
+	assert.Len(t, allowedOrigins, 2)
+	assert.Contains(t, allowedOrigins, "https://example.com")
+
+	var parsedConfig models.WidgetConfig
+	json.Unmarshal([]byte(createdBot.WidgetConfig), &parsedConfig)
+	assert.Equal(t, "#ff5733", parsedConfig.ThemeColor)
+	assert.Equal(t, "Welcome to our bot!", parsedConfig.InitialMessage)
+}
+
+func TestUpdateBot_WithWidgetConfig(t *testing.T) {
+	db := setupTestDB()
+	r := setupRouter(db)
+
+	// Create initial bot
+	botInstance := models.Bot{UserID: "test-user-id", Name: "Test Bot"}
+	db.Create(&botInstance)
+
+	// Update with widget config
+	widgetConfig := &models.WidgetConfig{
+		ThemeColor:     "#6366f1",
+		InitialMessage: "Updated message",
+		Position:       "bottom-right",
+		BotAvatar:      "",
+	}
+
+	updateReq := models.UpdateBotRequest{
+		Name:           "Updated Bot",
+		AllowedOrigins: []string{"https://newdomain.com"},
+		WidgetConfig:   widgetConfig,
+	}
+	jsonValue, _ := json.Marshal(updateReq)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("PUT", "/api/bots/"+botInstance.ID, bytes.NewBuffer(jsonValue))
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var updatedBot models.Bot
+	db.First(&updatedBot, "id = ?", botInstance.ID)
+	assert.Equal(t, "Updated Bot", updatedBot.Name)
+	assert.NotEmpty(t, updatedBot.AllowedOrigins)
+	assert.NotEmpty(t, updatedBot.WidgetConfig)
+}

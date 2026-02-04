@@ -3,6 +3,16 @@
  */
 
 /*
+ * WidgetConfig holds configuration for the embeddable widget
+ */
+export interface WidgetConfig {
+  theme_color: string;
+  initial_message: string;
+  position: string;
+  bot_avatar: string;
+}
+
+/*
  * Bot represents a user's chatbot
  */
 export interface Bot {
@@ -10,6 +20,8 @@ export interface Bot {
   user_id: string;
   name: string;
   system_prompt: string;
+  allowed_origins: string;
+  widget_config: string;
   created_at: string | Date;
   updated_at: string | Date;
   deleted_at: string | Date | null;
@@ -21,6 +33,8 @@ export interface Bot {
 export interface CreateBotRequest {
   name: string;
   system_prompt: string;
+  allowed_origins: string[];
+  widget_config: WidgetConfig | null;
 }
 
 /*
@@ -29,6 +43,8 @@ export interface CreateBotRequest {
 export interface UpdateBotRequest {
   name: string;
   system_prompt: string;
+  allowed_origins: string[];
+  widget_config: WidgetConfig | null;
 }
 
 /*
@@ -56,6 +72,34 @@ export interface DocumentChunk {
   content: string;
   chunk_index: number;
   created_at: string | Date;
+  source: Source;
+}
+
+/*
+ * ChatSession represents an anonymous user session for the widget
+ */
+export interface ChatSession {
+  id: string;
+  bot_id: string;
+  created_at: string | Date;
+  last_activity_at: string | Date;
+  expires_at: string | Date;
+}
+
+/*
+ * CreateSessionRequest holds data for creating a new chat session
+ */
+export interface CreateSessionRequest {
+  bot_id: string;
+}
+
+/*
+ * SessionResponse represents the response when creating a session
+ */
+export interface SessionResponse {
+  session_id: string;
+  bot_id: string;
+  expires_at: string | Date;
 }
 
 /*
