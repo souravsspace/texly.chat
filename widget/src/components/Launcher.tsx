@@ -7,6 +7,27 @@ interface LauncherProps {
   position: "bottom-right" | "bottom-left" | "top-right" | "top-left";
 }
 
+// Helper function to darken a hex color
+const darkenColor = (hexColor: string | undefined, percent: number): string => {
+  // Default color if undefined
+  if (!hexColor) {
+    hexColor = '#6366f1';
+  }
+  
+  const hex = hexColor.replace('#', '');
+  const r = Number.parseInt(hex.substring(0, 2), 16);
+  const g = Number.parseInt(hex.substring(2, 4), 16);
+  const b = Number.parseInt(hex.substring(4, 6), 16);
+  
+  const darkenValue = (value: number) => Math.max(0, Math.floor(value * (1 - percent)));
+  
+  const newR = darkenValue(r).toString(16).padStart(2, '0');
+  const newG = darkenValue(g).toString(16).padStart(2, '0');
+  const newB = darkenValue(b).toString(16).padStart(2, '0');
+  
+  return `#${newR}${newG}${newB}`;
+};
+
 export const Launcher: React.FC<LauncherProps> = ({
   isOpen,
   onClick,
@@ -32,9 +53,10 @@ export const Launcher: React.FC<LauncherProps> = ({
     <button
       type="button"
       onClick={onClick}
-      className={`fixed ${getPositionClasses()} z-9999 w-14 h-14 rounded-full shadow-lg transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-opacity-50 animate-fade-in`}
+      className={`fixed ${getPositionClasses()} w-14 h-14 rounded-full shadow-lg transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-opacity-50 animate-fade-in`}
       style={{
-        backgroundColor: themeColor,
+        backgroundColor: darkenColor(themeColor, 0.2),
+        zIndex: 9999,
       }}
       aria-label={isOpen ? "Close chat" : "Open chat"}
     >

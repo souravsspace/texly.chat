@@ -94,6 +94,7 @@ export class WidgetAPI {
     onComplete: () => void,
     onError: (error: string) => void,
   ): Promise<void> {
+    console.log("[Widget API] Sending message:", message, "to session:", sessionId);
     const body: ChatRequest = { message };
 
     const response = await fetch(
@@ -107,6 +108,8 @@ export class WidgetAPI {
       },
     );
 
+    console.log("[Widget API] Response status:", response.status);
+
     if (!response.ok) {
       if (response.status === 404 || response.status === 401) {
         throw new Error("SESSION_EXPIRED");
@@ -119,8 +122,11 @@ export class WidgetAPI {
       throw new Error("No response body");
     }
 
+    console.log("[Widget API] Starting to read SSE stream...");
+
     const decoder = new TextDecoder();
     let buffer = "";
+    let completedSuccessfully = false;
 
     try {
       while (true) {
@@ -135,15 +141,20 @@ export class WidgetAPI {
         for (const line of lines) {
           if (line.startsWith("data: ")) {
             const data = line.substring(6);
+            console.log("[Widget API] Received SSE data:", data);
             try {
               const parsed: ChatTokenResponse = JSON.parse(data);
 
               if (parsed.type === "token" && parsed.content) {
+                console.log("[Widget API] Token received:", parsed.content);
                 onToken(parsed.content);
               } else if (parsed.type === "done") {
+                console.log("[Widget API] Stream completed successfully");
+                completedSuccessfully = true;
                 onComplete();
                 return;
               } else if (parsed.type === "error" && parsed.error) {
+                console.error("[Widget API] Stream error:", parsed.error);
                 onError(parsed.error);
                 return;
               }
@@ -152,6 +163,12 @@ export class WidgetAPI {
             }
           }
         }
+      }
+
+      // If we exit the loop without receiving a "done" message, still call onComplete
+      if (!completedSuccessfully) {
+        console.log("[Widget API] Stream ended without 'done' message, completing anyway");
+        onComplete();
       }
     } catch (error) {
       onError(error instanceof Error ? error.message : "Unknown error");

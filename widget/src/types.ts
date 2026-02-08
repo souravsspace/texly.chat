@@ -1,8 +1,8 @@
 export interface WidgetConfig {
-  themeColor: string;
-  initialMessage: string;
+  theme_color: string;
+  initial_message: string;
   position: "bottom-right" | "bottom-left" | "top-right" | "top-left";
-  botAvatar?: string;
+  bot_avatar?: string;
 }
 
 export interface BotConfig {
