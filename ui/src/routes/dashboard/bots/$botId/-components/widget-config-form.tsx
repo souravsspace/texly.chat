@@ -251,7 +251,12 @@ export function WidgetConfigForm({
             </form.Field>
 
             {/* Submit Button */}
-            <Button className="w-full" disabled={isSubmitting} type="submit">
+            <Button
+              className="w-full"
+              disabled={isSubmitting}
+              size={"lg"}
+              type="submit"
+            >
               {isSubmitting ? "Saving..." : "Save Configuration"}
             </Button>
           </FieldGroup>

@@ -18,6 +18,7 @@ import {
 } from "@/components/ai-elements/message";
 import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 
 export const Route = createFileRoute("/dashboard/bots/$botId/chat")({
@@ -126,15 +127,9 @@ function ChatPage() {
   }, [inputValue]);
 
   return (
-    <div className="flex h-screen flex-col">
-      {/* Header */}
-      <header className="flex shrink-0 items-center gap-2 border-b bg-background px-4 py-3">
-        <BotIcon className="size-5" />
-        <h1 className="font-semibold text-lg">Chat</h1>
-      </header>
-
+    <Card className="flex flex-col overflow-hidden">
       {/* Messages */}
-      <Conversation className="flex-1">
+      <Conversation className="min-h-[500px] flex-1">
         <ConversationContent>
           {messages.length === 0 ? (
             <ConversationEmptyState
@@ -180,7 +175,7 @@ function ChatPage() {
       </Conversation>
 
       {/* Input */}
-      <div className="shrink-0 border-t bg-background p-4">
+      <div className="shrink-0 border-t p-4">
         <form className="mx-auto max-w-3xl" onSubmit={handleSubmit}>
           <div className="relative flex items-end gap-2">
             <Textarea
@@ -208,6 +203,6 @@ function ChatPage() {
           </div>
         </form>
       </div>
-    </div>
+    </Card>
   );
 }

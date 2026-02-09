@@ -44,7 +44,7 @@ export function EmbedCodeDisplay({ botId }: EmbedCodeDisplayProps) {
 
         {/* Code Block */}
         <div className="relative">
-          <pre className="overflow-x-auto rounded-lg border bg-muted p-4">
+          <pre className="overflow-x-auto border bg-muted p-4">
             <code className="font-mono text-sm">{embedCode}</code>
           </pre>
 
@@ -53,7 +53,7 @@ export function EmbedCodeDisplay({ botId }: EmbedCodeDisplayProps) {
             className="absolute top-2 right-2"
             onClick={handleCopy}
             size="sm"
-            variant="outline"
+            variant="ghost"
           >
             {copied ? (
               <>
