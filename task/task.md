@@ -52,10 +52,10 @@ This file tracks the progress of the entire roadmap. Refer to the specific task 
     - [x] Implement State & API Client
     - [x] Build Embed Script loader
 
-- [ ] **2.3 Widget Dashboard** (`08_phase2_widget_dashboard.md`)
-    - [ ] Build Configuration Form (Theme, Origins)
-    - [ ] Implement Live Preview
-    - [ ] Add Embed Code Generator/Display
+- [x] **2.3 Widget Dashboard** (`08_phase2_widget_dashboard.md`)
+    - [x] Build Configuration Form (Theme, Origins)
+    - [x] Implement Live Preview
+    - [x] Add Embed Code Generator/Display
 
 - [ ] **2.2 File Uploads** (`09-phase2-files.md`)
     - [ ] Implement File Parser (PDF/DOCX) (`internal/services/parser`)

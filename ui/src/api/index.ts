@@ -82,14 +82,10 @@ class ApiClient {
       });
     },
 
-    update: (id: string, name: string, system_prompt?: string) => {
-      const payload: UpdateBotRequest = {
-        name,
-        system_prompt: system_prompt || "",
-      };
+    update: (id: string, data: UpdateBotRequest) => {
       return this.request<Bot>(`/bots/${id}`, {
         method: "PUT",
-        body: JSON.stringify(payload),
+        body: JSON.stringify(data),
       });
     },
 

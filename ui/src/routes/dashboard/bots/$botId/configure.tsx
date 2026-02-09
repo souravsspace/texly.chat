@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BotNav } from "./-components/bot-nav";
 import { SourceManager } from "./-components/source-manager";
 
 export const Route = createFileRoute("/dashboard/bots/$botId/configure")({
@@ -92,6 +93,9 @@ function ConfigurePage() {
           </div>
         </div>
       </div>
+
+      {/* Navigation Tabs */}
+      <BotNav botId={botId} currentPath="configure" />
 
       {/* Main Content */}
       <SourceManager botId={botId} />
