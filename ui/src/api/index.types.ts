@@ -76,6 +76,48 @@ export interface DocumentChunk {
 }
 
 /*
+ * Message represents a chat message exchanged between user and bot
+ */
+export interface Message {
+  id: string;
+  session_id: string;
+  bot_id: string;
+  user_id: string | null;
+  role: string;
+  content: string;
+  token_count: number;
+  created_at: string | Date;
+  deleted_at: string | Date | null;
+}
+
+/*
+ * MessageStats represents aggregated statistics for a bot
+ */
+export interface MessageStats {
+  bot_id: string;
+  date: string | Date;
+  message_count: number;
+  total_tokens: number;
+  user_messages: number;
+  bot_messages: number;
+  unique_sessions: number;
+}
+
+/*
+ * BotAnalytics represents overall analytics for a bot
+ */
+export interface BotAnalytics {
+  bot_id: string;
+  total_messages: number;
+  total_tokens: number;
+  total_sessions: number;
+  avg_messages_per_day: number;
+  avg_tokens_per_day: number;
+  avg_messages_per_session: number;
+  last_message_at: string | Date | null;
+}
+
+/*
  * ChatSession represents an anonymous user session for the widget
  */
 export interface ChatSession {
@@ -145,6 +187,23 @@ export interface CreateSourceRequest {
 export interface CreateTextSourceRequest {
   text: string;
   name: string;
+}
+
+/*
+ * CreateSitemapSourceRequest holds data for creating a sitemap crawl source
+ */
+export interface CreateSitemapSourceRequest {
+  url: string;
+}
+
+/*
+ * SitemapResponse holds the response for sitemap crawl creation
+ */
+export interface SitemapResponse {
+  message: string;
+  total_urls: number;
+  created_count: number;
+  sources: (Source | null)[];
 }
 
 /*

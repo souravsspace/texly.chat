@@ -17,6 +17,7 @@ import { Route as DashboardBotsBotIdRouteImport } from './routes/dashboard/bots/
 import { Route as DashboardBotsBotIdWidgetRouteImport } from './routes/dashboard/bots/$botId/widget'
 import { Route as DashboardBotsBotIdConfigureRouteImport } from './routes/dashboard/bots/$botId/configure'
 import { Route as DashboardBotsBotIdChatRouteImport } from './routes/dashboard/bots/$botId/chat'
+import { Route as DashboardBotsBotIdAnalyticsRouteImport } from './routes/dashboard/bots/$botId/analytics'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -60,6 +61,12 @@ const DashboardBotsBotIdChatRoute = DashboardBotsBotIdChatRouteImport.update({
   path: '/chat',
   getParentRoute: () => DashboardBotsBotIdRoute,
 } as any)
+const DashboardBotsBotIdAnalyticsRoute =
+  DashboardBotsBotIdAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => DashboardBotsBotIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof AuthSignupRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/bots/$botId': typeof DashboardBotsBotIdRouteWithChildren
+  '/dashboard/bots/$botId/analytics': typeof DashboardBotsBotIdAnalyticsRoute
   '/dashboard/bots/$botId/chat': typeof DashboardBotsBotIdChatRoute
   '/dashboard/bots/$botId/configure': typeof DashboardBotsBotIdConfigureRoute
   '/dashboard/bots/$botId/widget': typeof DashboardBotsBotIdWidgetRoute
@@ -77,6 +85,7 @@ export interface FileRoutesByTo {
   '/signup': typeof AuthSignupRoute
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/bots/$botId': typeof DashboardBotsBotIdRouteWithChildren
+  '/dashboard/bots/$botId/analytics': typeof DashboardBotsBotIdAnalyticsRoute
   '/dashboard/bots/$botId/chat': typeof DashboardBotsBotIdChatRoute
   '/dashboard/bots/$botId/configure': typeof DashboardBotsBotIdConfigureRoute
   '/dashboard/bots/$botId/widget': typeof DashboardBotsBotIdWidgetRoute
@@ -88,6 +97,7 @@ export interface FileRoutesById {
   '/_auth/signup': typeof AuthSignupRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/bots/$botId': typeof DashboardBotsBotIdRouteWithChildren
+  '/dashboard/bots/$botId/analytics': typeof DashboardBotsBotIdAnalyticsRoute
   '/dashboard/bots/$botId/chat': typeof DashboardBotsBotIdChatRoute
   '/dashboard/bots/$botId/configure': typeof DashboardBotsBotIdConfigureRoute
   '/dashboard/bots/$botId/widget': typeof DashboardBotsBotIdWidgetRoute
@@ -100,6 +110,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/dashboard/'
     | '/dashboard/bots/$botId'
+    | '/dashboard/bots/$botId/analytics'
     | '/dashboard/bots/$botId/chat'
     | '/dashboard/bots/$botId/configure'
     | '/dashboard/bots/$botId/widget'
@@ -110,6 +121,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/dashboard'
     | '/dashboard/bots/$botId'
+    | '/dashboard/bots/$botId/analytics'
     | '/dashboard/bots/$botId/chat'
     | '/dashboard/bots/$botId/configure'
     | '/dashboard/bots/$botId/widget'
@@ -120,6 +132,7 @@ export interface FileRouteTypes {
     | '/_auth/signup'
     | '/dashboard/'
     | '/dashboard/bots/$botId'
+    | '/dashboard/bots/$botId/analytics'
     | '/dashboard/bots/$botId/chat'
     | '/dashboard/bots/$botId/configure'
     | '/dashboard/bots/$botId/widget'
@@ -191,16 +204,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardBotsBotIdChatRouteImport
       parentRoute: typeof DashboardBotsBotIdRoute
     }
+    '/dashboard/bots/$botId/analytics': {
+      id: '/dashboard/bots/$botId/analytics'
+      path: '/analytics'
+      fullPath: '/dashboard/bots/$botId/analytics'
+      preLoaderRoute: typeof DashboardBotsBotIdAnalyticsRouteImport
+      parentRoute: typeof DashboardBotsBotIdRoute
+    }
   }
 }
 
 interface DashboardBotsBotIdRouteChildren {
+  DashboardBotsBotIdAnalyticsRoute: typeof DashboardBotsBotIdAnalyticsRoute
   DashboardBotsBotIdChatRoute: typeof DashboardBotsBotIdChatRoute
   DashboardBotsBotIdConfigureRoute: typeof DashboardBotsBotIdConfigureRoute
   DashboardBotsBotIdWidgetRoute: typeof DashboardBotsBotIdWidgetRoute
 }
 
 const DashboardBotsBotIdRouteChildren: DashboardBotsBotIdRouteChildren = {
+  DashboardBotsBotIdAnalyticsRoute: DashboardBotsBotIdAnalyticsRoute,
   DashboardBotsBotIdChatRoute: DashboardBotsBotIdChatRoute,
   DashboardBotsBotIdConfigureRoute: DashboardBotsBotIdConfigureRoute,
   DashboardBotsBotIdWidgetRoute: DashboardBotsBotIdWidgetRoute,

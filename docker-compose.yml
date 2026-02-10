@@ -29,6 +29,10 @@ services:
       - MINIO_USE_SSL=false
       # Upload Configuration
       - MAX_UPLOAD_SIZE_MB=${MAX_UPLOAD_SIZE_MB:-100}
+      # Redis Configuration
+      - REDIS_ADDR=redis:6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - REDIS_DB=${REDIS_DB:-0}
     volumes:
       - server-data:/app/data
     depends_on:
@@ -36,6 +40,8 @@ services:
         condition: service_healthy
       storage-init:
         condition: service_completed_successfully
+      redis:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
       interval: 30s
@@ -89,10 +95,30 @@ services:
     networks:
       - texly-internal
 
+  # Redis for rate limiting and caching
+  redis:
+    image: redis:7-alpine
+    container_name: texly-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      - texly-internal
+    restart: unless-stopped
+
 volumes:
   server-data:
     driver: local
   storage-data:
+    driver: local
+  redis-data:
     driver: local
 
 networks:

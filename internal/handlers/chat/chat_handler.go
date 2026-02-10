@@ -87,11 +87,15 @@ func (h *ChatHandler) StreamChat(c *gin.Context) {
 	}
 
 	// Start streaming from chat service
+	// Generate a session ID for this chat (in dashboard, session = one conversation)
+	sessionID := botID + "-" + userID
 	tokenChan, errChan := h.chatService.StreamChat(
 		c.Request.Context(),
 		botID,
 		bot.SystemPrompt,
 		req.Message,
+		sessionID,
+		&userID,
 	)
 
 	// Stream tokens

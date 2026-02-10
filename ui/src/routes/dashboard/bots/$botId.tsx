@@ -104,20 +104,25 @@ function BotLayout() {
   );
 }
 
-function getCurrentPath(pathname: string): "configure" | "chat" | "widget" {
+function getCurrentPath(
+  pathname: string
+): "configure" | "chat" | "widget" | "analytics" {
   if (pathname.includes("/chat")) return "chat";
   if (pathname.includes("/widget")) return "widget";
+  if (pathname.includes("/analytics")) return "analytics";
   return "configure";
 }
 
 function getPageDescription(
-  currentPath: "configure" | "chat" | "widget"
+  currentPath: "configure" | "chat" | "widget" | "analytics"
 ): string {
   switch (currentPath) {
     case "chat":
       return "Test your chatbot and see how it responds";
     case "widget":
       return "Customize and embed your chatbot widget";
+    case "analytics":
+      return "View your bot reports";
     default:
       return "Configure data sources for your chatbot";
   }

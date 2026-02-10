@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
-import { Code, MessageSquare, Settings, Trash2 } from "lucide-react";
+import { Settings, Trash2 } from "lucide-react";
 import type { Bot } from "@/api/index.types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -60,46 +60,14 @@ export function BotCard({ bot, onDelete, isDeleting }: BotCardProps) {
         </div>
 
         <div className="flex w-full flex-col gap-2">
-          <div className="flex gap-2">
-            <Link
-              className="flex-1"
-              params={{ botId: bot.id }}
-              to="/dashboard/bots/$botId/configure"
-            >
-              <Button
-                className="w-full transition-colors hover:bg-accent"
-                size="sm"
-                variant="outline"
-              >
-                <Settings className="mr-2 h-4 w-4" />
-                Configure
-              </Button>
-            </Link>
-
-            <Link
-              className="flex-1"
-              params={{ botId: bot.id }}
-              to="/dashboard/bots/$botId/widget"
-            >
-              <Button
-                className="w-full transition-colors hover:bg-accent"
-                size="sm"
-                variant="outline"
-              >
-                <Code className="mr-2 h-4 w-4" />
-                Widget
-              </Button>
-            </Link>
-          </div>
-
           <Link
             className="w-full"
             params={{ botId: bot.id }}
-            to="/dashboard/bots/$botId/chat"
+            to="/dashboard/bots/$botId/configure"
           >
             <Button className="w-full" size="sm" variant="default">
-              <MessageSquare className="mr-2 h-4 w-4" />
-              Chat
+              <Settings className="mr-2 h-4 w-4" />
+              Setting
             </Button>
           </Link>
         </div>

@@ -11,6 +11,7 @@ import (
 	"github.com/souravsspace/texly.chat/internal/queue"
 	botRepo "github.com/souravsspace/texly.chat/internal/repo/bot"
 	sourceRepo "github.com/souravsspace/texly.chat/internal/repo/source"
+	"github.com/souravsspace/texly.chat/internal/services/scraper"
 	"github.com/souravsspace/texly.chat/internal/services/storage"
 )
 
@@ -18,11 +19,11 @@ import (
 * SourceHandler handles HTTP requests for sources
  */
 type SourceHandler struct {
-	sourceRepo   *sourceRepo.SourceRepo
-	botRepo      *botRepo.BotRepo
-	jobQueue     queue.JobQueue
-	storageSvc   *storage.MinIOStorageService
-	maxUploadMB  int
+	sourceRepo  *sourceRepo.SourceRepo
+	botRepo     *botRepo.BotRepo
+	jobQueue    queue.JobQueue
+	storageSvc  *storage.MinIOStorageService
+	maxUploadMB int
 }
 
 /*
@@ -419,4 +420,98 @@ func (h *SourceHandler) CreateTextSource(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, source)
+}
+
+/*
+ * CreateSitemapSource handles POST /api/bots/:id/sources/sitemap
+ */
+func (h *SourceHandler) CreateSitemapSource(c *gin.Context) {
+	// Get authenticated user
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	// Get bot ID from URL
+	botID := c.Param("id")
+
+	// Verify bot ownership
+	bot, err := h.botRepo.GetByID(botID, userID.(string))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Bot not found"})
+		return
+	}
+
+	if bot == nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+		return
+	}
+
+	// Parse request
+	var req models.CreateSitemapSourceRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Parse and fetch sitemap URLs
+	sitemapParser := scraper.NewSitemapParser(1000) // Max 1000 URLs
+	urls, err := sitemapParser.ParseSitemap(req.URL)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Failed to parse sitemap: %v", err)})
+		return
+	}
+
+	if len(urls) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No URLs found in sitemap"})
+		return
+	}
+
+	// Create sources for each URL and enqueue jobs
+	var createdSources []*models.Source
+	for _, url := range urls {
+		source := &models.Source{
+			BotID:      botID,
+			SourceType: models.SourceTypeURL,
+			URL:        url,
+			Status:     models.SourceStatusPending,
+		}
+
+		if err := h.sourceRepo.Create(source); err != nil {
+			// Log error but continue with other URLs
+			fmt.Printf("Failed to create source for URL %s: %v\n", url, err)
+			continue
+		}
+
+		// Enqueue job for processing
+		job := queue.Job{
+			SourceID: source.ID,
+			BotID:    botID,
+			URL:      url,
+		}
+
+		if err := h.jobQueue.Enqueue(job); err != nil {
+			// Mark as failed but continue with other URLs
+			_ = h.sourceRepo.UpdateStatus(source.ID, models.SourceStatusFailed, "Failed to queue processing job")
+			fmt.Printf("Failed to enqueue job for URL %s: %v\n", url, err)
+			continue
+		}
+
+		createdSources = append(createdSources, source)
+	}
+
+	if len(createdSources) == 0 {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create any sources from sitemap"})
+		return
+	}
+
+	response := models.SitemapResponse{
+		Message:      fmt.Sprintf("Created %d sources from sitemap", len(createdSources)),
+		TotalURLs:    len(urls),
+		CreatedCount: len(createdSources),
+		Sources:      createdSources,
+	}
+
+	c.JSON(http.StatusCreated, response)
 }

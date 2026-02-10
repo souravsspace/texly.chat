@@ -2,10 +2,15 @@ import Cookies from "js-cookie";
 import type {
   AuthResponse,
   Bot,
+  BotAnalytics,
   ChatTokenResponse,
   CreateBotRequest,
+  CreateSitemapSourceRequest,
   CreateSourceRequest,
   CreateTextSourceRequest,
+  Message,
+  MessageStats,
+  SitemapResponse,
   Source,
   UpdateBotRequest,
   User,
@@ -176,6 +181,14 @@ class ApiClient {
       });
     },
 
+    createSitemap: (botId: string, url: string) => {
+      const payload: CreateSitemapSourceRequest = { url };
+      return this.request<SitemapResponse>(`/bots/${botId}/sources/sitemap`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+    },
+
     delete: (botId: string, sourceId: string) =>
       this.request<void>(`/bots/${botId}/sources/${sourceId}`, {
         method: "DELETE",
@@ -238,6 +251,21 @@ class ApiClient {
         reader.releaseLock();
       }
     },
+  };
+
+  analytics = {
+    getBotAnalytics: (botId: string) =>
+      this.request<BotAnalytics>(`/analytics/bots/${botId}`),
+
+    getBotDailyStats: (botId: string, days = 30) =>
+      this.request<MessageStats[]>(
+        `/analytics/bots/${botId}/daily?days=${days}`
+      ),
+
+    getUserAnalytics: () => this.request<BotAnalytics[]>("/analytics/user"),
+
+    getSessionMessages: (sessionId: string) =>
+      this.request<Message[]>(`/analytics/sessions/${sessionId}/messages`),
   };
 }
 

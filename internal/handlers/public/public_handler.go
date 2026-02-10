@@ -187,6 +187,8 @@ func (h *PublicHandler) StreamChatPublic(c *gin.Context) {
 		bot.ID,
 		bot.SystemPrompt,
 		req.Message,
+		sessionID,
+		nil, // Widget users don't have user IDs
 	)
 
 	// Stream tokens

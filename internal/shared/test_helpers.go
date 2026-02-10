@@ -13,7 +13,7 @@ import (
 
 func SetupTestDB() *gorm.DB {
 	gin.SetMode(gin.TestMode)
-	
+
 	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
@@ -21,7 +21,7 @@ func SetupTestDB() *gorm.DB {
 		log.Fatalf("Failed to connect to test database: %v", err)
 	}
 
-	if err := db.AutoMigrate(&models.User{}, &models.Bot{}, &models.Source{}, &models.DocumentChunk{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.Bot{}, &models.Source{}, &models.DocumentChunk{}, &models.Message{}); err != nil {
 		log.Fatalf("Failed to migrate test database: %v", err)
 	}
 

@@ -16,6 +16,7 @@ func TestNewChatService(t *testing.T) {
 	service := NewChatService(
 		nil, // embedding service
 		nil, // search service
+		nil, // message repo
 		"gpt-4o-mini",
 		0.7,
 		5,
@@ -33,7 +34,7 @@ func TestNewChatService(t *testing.T) {
  * Test buildMessages with no context
  */
 func TestBuildMessages_NoContext(t *testing.T) {
-	service := NewChatService(nil, nil, "gpt-4o-mini", 0.7, 5, "test-key")
+	service := NewChatService(nil, nil, nil, "gpt-4o-mini", 0.7, 5, "test-key")
 
 	messages := service.buildMessages(
 		"You are a helpful assistant",
@@ -49,7 +50,7 @@ func TestBuildMessages_NoContext(t *testing.T) {
  * Test buildMessages with context
  */
 func TestBuildMessages_WithContext(t *testing.T) {
-	service := NewChatService(nil, nil, "gpt-4o-mini", 0.7, 5, "test-key")
+	service := NewChatService(nil, nil, nil, "gpt-4o-mini", 0.7, 5, "test-key")
 
 	contextChunks := []vector.SearchResult{
 		{
@@ -82,7 +83,7 @@ func TestBuildMessages_WithContext(t *testing.T) {
  * Test buildMessages without system prompt
  */
 func TestBuildMessages_NoSystemPrompt(t *testing.T) {
-	service := NewChatService(nil, nil, "gpt-4o-mini", 0.7, 5, "test-key")
+	service := NewChatService(nil, nil, nil, "gpt-4o-mini", 0.7, 5, "test-key")
 
 	messages := service.buildMessages(
 		"", // No system prompt
@@ -102,7 +103,7 @@ func TestStreamChat_ContextCancellation(t *testing.T) {
 	// This is an integration test that requires actual API access
 	t.Skip("Skipping integration test - requires OpenAI API key")
 
-	service := NewChatService(nil, nil, "gpt-4o-mini", 0.7, 5, "test-key")
+	service := NewChatService(nil, nil, nil, "gpt-4o-mini", 0.7, 5, "test-key")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // Cancel immediately
@@ -112,6 +113,8 @@ func TestStreamChat_ContextCancellation(t *testing.T) {
 		"bot-123",
 		"You are helpful",
 		"Hello",
+		"session-123",
+		nil,
 	)
 
 	// Should receive error due to cancelled context
@@ -127,7 +130,7 @@ func TestStreamChat_ContextCancellation(t *testing.T) {
  * Test buildMessages formatting with multiple context chunks
  */
 func TestBuildMessages_ContextFormatting(t *testing.T) {
-	service := NewChatService(nil, nil, "gpt-4o-mini", 0.7, 5, "test-key")
+	service := NewChatService(nil, nil, nil, "gpt-4o-mini", 0.7, 5, "test-key")
 
 	contextChunks := []vector.SearchResult{
 		{
@@ -173,6 +176,7 @@ func TestChatService_TemperatureConfiguration(t *testing.T) {
 			service := NewChatService(
 				nil,
 				nil,
+				nil,
 				"gpt-4o-mini",
 				tc.temperature,
 				5,
@@ -201,6 +205,7 @@ func TestChatService_MaxContextChunks(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			service := NewChatService(
+				nil,
 				nil,
 				nil,
 				"gpt-4o-mini",

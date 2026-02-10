@@ -1,10 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { Code, Database, MessageSquare } from "lucide-react";
+import { BarChart3, Code, Database, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface BotNavProps {
   botId: string;
-  currentPath: "configure" | "widget" | "chat";
+  currentPath: "configure" | "widget" | "chat" | "analytics";
 }
 
 export function BotNav({ botId, currentPath }: BotNavProps) {
@@ -26,6 +26,12 @@ export function BotNav({ botId, currentPath }: BotNavProps) {
       label: "Chat",
       icon: MessageSquare,
       href: `/dashboard/bots/${botId}/chat`,
+    },
+    {
+      path: "analytics" as const,
+      label: "Analytics",
+      icon: BarChart3,
+      href: `/dashboard/bots/${botId}/analytics`,
     },
   ];
 

@@ -12,28 +12,31 @@ import (
 * Config holds the application configuration values
  */
 type Config struct {
-	DbUrl              string
-	Port               string
-	JwtSecret          string
-	OPENAI_API_KEY       string
+	DbUrl               string
+	Port                string
+	JwtSecret           string
+	OPENAI_API_KEY      string
 	EMBEDDING_MODEL     string
 	EMBEDDING_DIMENSION int
-	ChatModel          string
-	ChatTemperature    float64
-	MaxContextChunks   int
+	ChatModel           string
+	ChatTemperature     float64
+	MaxContextChunks    int
 	// MinIO Configuration
-	MinIOEndpoint    string
-	MinIOAccessKey   string
-	MinIOSecretKey   string
-	MinIOBucket      string
-	MinIOUseSSL      bool
-	MaxUploadSizeMB  int
+	MinIOEndpoint   string
+	MinIOAccessKey  string
+	MinIOSecretKey  string
+	MinIOBucket     string
+	MinIOUseSSL     bool
+	MaxUploadSizeMB int
+	// Redis Configuration
+	RedisAddr     string
+	RedisPassword string
+	RedisDB       int
 }
-
 
 /*
 * Load initializes the configuration from environment variables or defaults
-*/
+ */
 func Load() Config {
 	if err := godotenv.Load(".env.local"); err != nil {
 		log.Println("No .env.local file found, using environment variables")
@@ -120,21 +123,39 @@ func Load() Config {
 		}
 	}
 
+	// Redis Configuration
+	redisAddr := os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		redisAddr = "localhost:6379"
+	}
+
+	redisPassword := os.Getenv("REDIS_PASSWORD")
+
+	redisDB := 0
+	if redisDBStr := os.Getenv("REDIS_DB"); redisDBStr != "" {
+		if db, err := strconv.Atoi(redisDBStr); err == nil {
+			redisDB = db
+		}
+	}
+
 	return Config{
-		DbUrl:              dbUrl,
-		Port:               port,
-		JwtSecret:          jwtSecret,
-		OPENAI_API_KEY:       OPENAI_API_KEY,
+		DbUrl:               dbUrl,
+		Port:                port,
+		JwtSecret:           jwtSecret,
+		OPENAI_API_KEY:      OPENAI_API_KEY,
 		EMBEDDING_MODEL:     EMBEDDING_MODEL,
 		EMBEDDING_DIMENSION: EMBEDDING_DIMENSION,
-		ChatModel:          chatModel,
-		ChatTemperature:    chatTemperature,
-		MaxContextChunks:   maxContextChunks,
-		MinIOEndpoint:      minioEndpoint,
-		MinIOAccessKey:     minioAccessKey,
-		MinIOSecretKey:     minioSecretKey,
-		MinIOBucket:        minioBucket,
-		MinIOUseSSL:        minioUseSSL,
-		MaxUploadSizeMB:    maxUploadSizeMB,
+		ChatModel:           chatModel,
+		ChatTemperature:     chatTemperature,
+		MaxContextChunks:    maxContextChunks,
+		MinIOEndpoint:       minioEndpoint,
+		MinIOAccessKey:      minioAccessKey,
+		MinIOSecretKey:      minioSecretKey,
+		MinIOBucket:         minioBucket,
+		MinIOUseSSL:         minioUseSSL,
+		MaxUploadSizeMB:     maxUploadSizeMB,
+		RedisAddr:           redisAddr,
+		RedisPassword:       redisPassword,
+		RedisDB:             redisDB,
 	}
 }

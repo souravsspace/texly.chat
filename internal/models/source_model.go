@@ -38,9 +38,9 @@ type Source struct {
 	BotID              string         `json:"bot_id" gorm:"not null;index"`
 	SourceType         SourceType     `json:"source_type" gorm:"not null;default:'url'"`
 	URL                string         `json:"url"`
-	FilePath           string         `json:"file_path"`           // MinIO object path
-	OriginalFilename   string         `json:"original_filename"`   // Original uploaded filename
-	ContentType        string         `json:"content_type"`        // MIME type
+	FilePath           string         `json:"file_path"`         // MinIO object path
+	OriginalFilename   string         `json:"original_filename"` // Original uploaded filename
+	ContentType        string         `json:"content_type"`      // MIME type
 	Status             SourceStatus   `json:"status" gorm:"not null;default:'pending'"`
 	ProcessingProgress int            `json:"processing_progress"` // 0-100
 	ErrorMessage       string         `json:"error_message"`
@@ -77,9 +77,26 @@ type CreateSourceRequest struct {
 }
 
 /*
-* CreateTextSourceRequest holds data for creating a text source
+ * CreateTextSourceRequest holds data for creating a text source
  */
 type CreateTextSourceRequest struct {
 	Text string `json:"text" binding:"required"`
 	Name string `json:"name"` // Optional name for the text source
+}
+
+/*
+ * CreateSitemapSourceRequest holds data for creating a sitemap crawl source
+ */
+type CreateSitemapSourceRequest struct {
+	URL string `json:"url" binding:"required,url"`
+}
+
+/*
+ * SitemapResponse holds the response for sitemap crawl creation
+ */
+type SitemapResponse struct {
+	Message      string    `json:"message"`
+	TotalURLs    int       `json:"total_urls"`
+	CreatedCount int       `json:"created_count"`
+	Sources      []*Source `json:"sources"`
 }

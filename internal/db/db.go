@@ -58,7 +58,7 @@ func Connect(path string) (*gorm.DB, error) {
 
 /*
 * Migrate applies database migrations
-*/
+ */
 func Migrate(db *gorm.DB) error {
 	// 1. Standard GORM Migrations
 	err := db.AutoMigrate(
@@ -66,6 +66,7 @@ func Migrate(db *gorm.DB) error {
 		&models.Bot{},
 		&models.Source{},
 		&models.DocumentChunk{},
+		&models.Message{},
 	)
 	if err != nil {
 		return fmt.Errorf("auto migrate failed: %w", err)
