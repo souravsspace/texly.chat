@@ -8,10 +8,41 @@ import (
 	"github.com/souravsspace/texly.chat/internal/shared"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
 )
 
+// Helper to generate a valid 1536-dimension embedding for testing
+func generateTestEmbedding(seed float32) []float32 {
+	embedding := make([]float32, 1536)
+	for i := range embedding {
+		embedding[i] = seed + float32(i)*0.0001
+	}
+	return embedding
+}
+
+// Helper to create test bot and source
+func setupTestBotAndSource(t *testing.T, gormDB *gorm.DB) (string, string) {
+	bot := models.Bot{
+		ID:   "test-bot-1",
+		Name: "Test Bot",
+	}
+	err := gormDB.Create(&bot).Error
+	require.NoError(t, err)
+
+	source := models.Source{
+		ID:     "test-source-1",
+		BotID:  "test-bot-1",
+		URL:    "https://example.com",
+		Status: models.SourceStatusCompleted,
+	}
+	err = gormDB.Create(&source).Error
+	require.NoError(t, err)
+
+	return bot.ID, source.ID
+}
+
 /*
-* TestNewVectorRepository tests repository creation
+ * TestNewVectorRepository tests repository creation
  */
 func TestNewVectorRepository(t *testing.T) {
 	gormDB := shared.SetupTestDB()
@@ -20,91 +51,70 @@ func TestNewVectorRepository(t *testing.T) {
 }
 
 /*
-* TestInitialize tests vector table initialization
+ * TestInitialize tests vector repository initialization
  */
 func TestInitialize(t *testing.T) {
 	gormDB := shared.SetupTestDB()
 	repo := NewVectorRepository(gormDB)
 
 	ctx := context.Background()
-	err := repo.Initialize(ctx, 128) // Small dimension for testing
+	err := repo.Initialize(ctx, 1536)
 
-	if err != nil {
-		t.Skipf("Skipping test - sqlite-vec extension not available: %v", err)
-	}
-
-	// Verify tables were created
-	sqlDB, _ := gormDB.DB()
-	
-	// Check vec_chunk_map table
-	var count int
-	err = sqlDB.QueryRow("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='vec_chunk_map'").Scan(&count)
 	require.NoError(t, err)
-	assert.Equal(t, 1, count)
-
-	// Check vec_items virtual table (if sqlite-vec is loaded)
-	err = sqlDB.QueryRow("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='vec_items'").Scan(&count)
-	if err == nil {
-		assert.Equal(t, 1, count)
-	}
 }
 
 /*
-* TestInsertEmbedding tests single embedding insertion
+ * TestInsertEmbedding tests single embedding insertion
  */
 func TestInsertEmbedding(t *testing.T) {
 	gormDB := shared.SetupTestDB()
 	repo := NewVectorRepository(gormDB)
 
 	ctx := context.Background()
-	err := repo.Initialize(ctx, 3)
-	if err != nil {
-		t.Skipf("Skipping test - sqlite-vec extension not available: %v", err)
-	}
+	err := repo.Initialize(ctx, 1536)
+	require.NoError(t, err)
 
-	// Create a test chunk first
+	// Create parent records
+	_, sourceID := setupTestBotAndSource(t, gormDB)
+
+	// Create a test chunk
 	chunk := models.DocumentChunk{
 		ID:       "chunk-1",
-		SourceID: "source-1",
+		SourceID: sourceID,
 		Content:  "test content",
 	}
 	err = gormDB.Create(&chunk).Error
 	require.NoError(t, err)
 
 	// Insert embedding
-	embedding := []float32{0.1, 0.2, 0.3}
+	embedding := generateTestEmbedding(0.1)
 	err = repo.InsertEmbedding(ctx, "chunk-1", embedding)
+	require.NoError(t, err)
 
-	// Note: This will fail if sqlite-vec is not loaded
-	// In that case, we just verify the error is expected
-	if err != nil {
-		t.Logf("Expected error without sqlite-vec: %v", err)
-		return
-	}
-
-	// If it succeeded, verify existence
+	// Verify existence
 	exists, err := repo.Exists(ctx, "chunk-1")
 	require.NoError(t, err)
 	assert.True(t, exists)
 }
 
 /*
-* TestBulkInsertEmbeddings tests bulk embedding insertion
+ * TestBulkInsertEmbeddings tests bulk embedding insertion
  */
 func TestBulkInsertEmbeddings(t *testing.T) {
 	gormDB := shared.SetupTestDB()
 	repo := NewVectorRepository(gormDB)
 
 	ctx := context.Background()
-	err := repo.Initialize(ctx, 2)
-	if err != nil {
-		t.Skipf("Skipping test - sqlite-vec extension not available: %v", err)
-	}
+	err := repo.Initialize(ctx, 1536)
+	require.NoError(t, err)
+
+	// Create parent records
+	_, sourceID := setupTestBotAndSource(t, gormDB)
 
 	// Create test chunks
 	chunks := []models.DocumentChunk{
-		{ID: "chunk-1", SourceID: "source-1", Content: "content 1"},
-		{ID: "chunk-2", SourceID: "source-1", Content: "content 2"},
+		{ID: "chunk-1", SourceID: sourceID, Content: "content 1"},
+		{ID: "chunk-2", SourceID: sourceID, Content: "content 2"},
 	}
 	for _, chunk := range chunks {
 		err := gormDB.Create(&chunk).Error
@@ -113,42 +123,41 @@ func TestBulkInsertEmbeddings(t *testing.T) {
 
 	// Bulk insert embeddings
 	data := []VectorData{
-		{ChunkID: "chunk-1", Embedding: []float32{0.1, 0.2}},
-		{ChunkID: "chunk-2", Embedding: []float32{0.3, 0.4}},
+		{ChunkID: "chunk-1", Embedding: generateTestEmbedding(0.1)},
+		{ChunkID: "chunk-2", Embedding: generateTestEmbedding(0.3)},
 	}
 
 	err = repo.BulkInsertEmbeddings(ctx, data)
-
-	// Note: This will fail if sqlite-vec is not loaded
-	if err != nil {
-		t.Logf("Expected error without sqlite-vec: %v", err)
-		return
-	}
+	require.NoError(t, err)
 
 	// Verify both exist
-	exists1, _ := repo.Exists(ctx, "chunk-1")
-	exists2, _ := repo.Exists(ctx, "chunk-2")
+	exists1, err := repo.Exists(ctx, "chunk-1")
+	require.NoError(t, err)
 	assert.True(t, exists1)
+
+	exists2, err := repo.Exists(ctx, "chunk-2")
+	require.NoError(t, err)
 	assert.True(t, exists2)
 }
 
 /*
-* TestSearchSimilar tests similarity search
+ * TestSearchSimilar tests similarity search
  */
 func TestSearchSimilar(t *testing.T) {
 	gormDB := shared.SetupTestDB()
 	repo := NewVectorRepository(gormDB)
 
 	ctx := context.Background()
-	err := repo.Initialize(ctx, 2)
-	if err != nil {
-		t.Skipf("Skipping test - sqlite-vec extension not available: %v", err)
-	}
+	err := repo.Initialize(ctx, 1536)
+	require.NoError(t, err)
+
+	// Create parent records
+	_, sourceID := setupTestBotAndSource(t, gormDB)
 
 	// Create and insert test data
 	chunks := []models.DocumentChunk{
-		{ID: "chunk-1", SourceID: "source-1", Content: "similar to query"},
-		{ID: "chunk-2", SourceID: "source-1", Content: "different content"},
+		{ID: "chunk-1", SourceID: sourceID, Content: "similar to query"},
+		{ID: "chunk-2", SourceID: sourceID, Content: "different content"},
 	}
 	for _, chunk := range chunks {
 		err := gormDB.Create(&chunk).Error
@@ -156,59 +165,57 @@ func TestSearchSimilar(t *testing.T) {
 	}
 
 	data := []VectorData{
-		{ChunkID: "chunk-1", Embedding: []float32{0.9, 0.1}},
-		{ChunkID: "chunk-2", Embedding: []float32{0.1, 0.9}},
+		{ChunkID: "chunk-1", Embedding: generateTestEmbedding(0.9)},
+		{ChunkID: "chunk-2", Embedding: generateTestEmbedding(0.1)},
 	}
 
 	err = repo.BulkInsertEmbeddings(ctx, data)
-	if err != nil {
-		t.Logf("Skipping search test without sqlite-vec: %v", err)
-		return
-	}
+	require.NoError(t, err)
 
-	// Search with query similar to chunk-1
-	queryEmbedding := []float32{0.8, 0.2}
-	matches, err := repo.SearchSimilar(ctx, queryEmbedding, 2)
+	// Search
+	queryEmbedding := generateTestEmbedding(0.85) // Similar to chunk-1
+	matches, err := repo.SearchSimilar(ctx, queryEmbedding, 5)
 
 	require.NoError(t, err)
 	assert.NotEmpty(t, matches)
-	// chunk-1 should be more similar than chunk-2
+
+	// Verify chunk-1 is more similar (lower distance)
 	if len(matches) >= 2 {
 		assert.Equal(t, "chunk-1", matches[0].ChunkID)
+		assert.Less(t, matches[0].Distance, matches[1].Distance)
 	}
 }
 
 /*
-* TestDeleteByChunkID tests deletion
+ * TestDeleteByChunkID tests deletion
  */
 func TestDeleteByChunkID(t *testing.T) {
 	gormDB := shared.SetupTestDB()
 	repo := NewVectorRepository(gormDB)
 
 	ctx := context.Background()
-	err := repo.Initialize(ctx, 2)
-	if err != nil {
-		t.Skipf("Skipping test - sqlite-vec extension not available: %v", err)
-	}
+	err := repo.Initialize(ctx, 1536)
+	require.NoError(t, err)
 
-	// Create and insert test data
+	// Create parent records
+	_, sourceID := setupTestBotAndSource(t, gormDB)
+
+	// Create chunk and insert embedding
 	chunk := models.DocumentChunk{
 		ID:       "chunk-1",
-		SourceID: "source-1",
-		Content:  "test",
+		SourceID: sourceID,
+		Content:  "test content",
 	}
 	err = gormDB.Create(&chunk).Error
 	require.NoError(t, err)
 
-	embedding := []float32{0.1, 0.2}
+	embedding := generateTestEmbedding(0.5)
 	err = repo.InsertEmbedding(ctx, "chunk-1", embedding)
-	if err != nil {
-		t.Logf("Skipping delete test without sqlite-vec: %v", err)
-		return
-	}
+	require.NoError(t, err)
 
 	// Verify exists
-	exists, _ := repo.Exists(ctx, "chunk-1")
+	exists, err := repo.Exists(ctx, "chunk-1")
+	require.NoError(t, err)
 	assert.True(t, exists)
 
 	// Delete
@@ -216,25 +223,45 @@ func TestDeleteByChunkID(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify deleted
-	exists, _ = repo.Exists(ctx, "chunk-1")
+	exists, err = repo.Exists(ctx, "chunk-1")
+	require.NoError(t, err)
 	assert.False(t, exists)
 }
 
 /*
-* TestExists tests existence check
+ * TestExists tests existence checking  
  */
 func TestExists(t *testing.T) {
 	gormDB := shared.SetupTestDB()
 	repo := NewVectorRepository(gormDB)
 
 	ctx := context.Background()
-	err := repo.Initialize(ctx, 2)
-	if err != nil {
-		t.Skipf("Skipping test - sqlite-vec extension not available: %v", err)
-	}
+	err := repo.Initialize(ctx, 1536)
+	require.NoError(t, err)
 
 	// Check non-existent
 	exists, err := repo.Exists(ctx, "non-existent")
 	require.NoError(t, err)
 	assert.False(t, exists)
+
+	// Create parent records
+	_, sourceID := setupTestBotAndSource(t, gormDB)
+
+	// Create chunk with embedding
+	chunk := models.DocumentChunk{
+		ID:       "chunk-1",
+		SourceID: sourceID,
+		Content:  "test content",
+	}
+	err = gormDB.Create(&chunk).Error
+	require.NoError(t, err)
+
+	embedding := generateTestEmbedding(0.5)
+	err = repo.InsertEmbedding(ctx, "chunk-1", embedding)
+	require.NoError(t, err)
+
+	// Check exists
+	exists, err = repo.Exists(ctx, "chunk-1")
+	require.NoError(t, err)
+	assert.True(t, exists)
 }

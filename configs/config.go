@@ -12,15 +12,17 @@ import (
 * Config holds the application configuration values
  */
 type Config struct {
-	DbUrl               string
-	Port                string
-	JwtSecret           string
-	OPENAI_API_KEY      string
-	EMBEDDING_MODEL     string
-	EMBEDDING_DIMENSION int
-	ChatModel           string
-	ChatTemperature     float64
-	MaxContextChunks    int
+	DatabaseURL          string
+	DatabaseMaxConns     int
+	DatabaseMaxIdleConns int
+	Port                 string
+	JWTSecret            string
+	OpenAIAPIKey         string
+	EmbeddingModel       string
+	EmbeddingDimension   int
+	ChatModel            string
+	ChatTemperature      float64
+	MaxContextChunks     int
 	// MinIO Configuration
 	MinIOEndpoint   string
 	MinIOAccessKey  string
@@ -29,133 +31,83 @@ type Config struct {
 	MinIOUseSSL     bool
 	MaxUploadSizeMB int
 	// Redis Configuration
-	RedisAddr     string
-	RedisPassword string
-	RedisDB       int
+	RedisURL string
 }
 
 /*
-* Load initializes the configuration from environment variables or defaults
+* Load initializes the configuration from environment variables
+* It will panic if required environment variables are missing
  */
 func Load() Config {
 	if err := godotenv.Load(".env.local"); err != nil {
 		log.Println("No .env.local file found, using environment variables")
 	}
 
-	dbUrl := os.Getenv("DATABASE_URL")
-	if dbUrl == "" {
-		dbUrl = "data/dev.db"
-	}
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-
-	jwtSecret := os.Getenv("JWT_SECRET")
-	if jwtSecret == "" {
-		jwtSecret = "secret"
-	}
-
-	OPENAI_API_KEY := os.Getenv("OPENAI_API_KEY")
-
-	EMBEDDING_MODEL := os.Getenv("EMBEDDING_MODEL")
-	if EMBEDDING_MODEL == "" {
-		EMBEDDING_MODEL = "text-embedding-3-small"
-	}
-
-	EMBEDDING_DIMENSION := 1536 // Default for text-embedding-3-small
-	if dimStr := os.Getenv("EMBEDDING_DIMENSION"); dimStr != "" {
-		if dim, err := strconv.Atoi(dimStr); err == nil {
-			EMBEDDING_DIMENSION = dim
-		}
-	}
-
-	chatModel := os.Getenv("OPENAI_CHAT_MODEL")
-	if chatModel == "" {
-		chatModel = "gpt-4o-mini"
-	}
-
-	chatTemperature := 0.7
-	if tempStr := os.Getenv("CHAT_TEMPERATURE"); tempStr != "" {
-		if temp, err := strconv.ParseFloat(tempStr, 64); err == nil {
-			chatTemperature = temp
-		}
-	}
-
-	maxContextChunks := 5
-	if maxStr := os.Getenv("MAX_CONTEXT_CHUNKS"); maxStr != "" {
-		if max, err := strconv.Atoi(maxStr); err == nil {
-			maxContextChunks = max
-		}
-	}
-
-	// MinIO Configuration
-	minioEndpoint := os.Getenv("MINIO_ENDPOINT")
-	if minioEndpoint == "" {
-		minioEndpoint = "localhost:9000"
-	}
-
-	minioAccessKey := os.Getenv("MINIO_ACCESS_KEY")
-	if minioAccessKey == "" {
-		minioAccessKey = "minioadmin"
-	}
-
-	minioSecretKey := os.Getenv("MINIO_SECRET_KEY")
-	if minioSecretKey == "" {
-		minioSecretKey = "minioadmin"
-	}
-
-	minioBucket := os.Getenv("MINIO_BUCKET")
-	if minioBucket == "" {
-		minioBucket = "texly-uploads"
-	}
-
-	minioUseSSL := false
-	if useSSLStr := os.Getenv("MINIO_USE_SSL"); useSSLStr == "true" {
-		minioUseSSL = true
-	}
-
-	maxUploadSizeMB := 100
-	if maxUploadStr := os.Getenv("MAX_UPLOAD_SIZE_MB"); maxUploadStr != "" {
-		if maxUpload, err := strconv.Atoi(maxUploadStr); err == nil {
-			maxUploadSizeMB = maxUpload
-		}
-	}
-
-	// Redis Configuration
-	redisAddr := os.Getenv("REDIS_ADDR")
-	if redisAddr == "" {
-		redisAddr = "localhost:6379"
-	}
-
-	redisPassword := os.Getenv("REDIS_PASSWORD")
-
-	redisDB := 0
-	if redisDBStr := os.Getenv("REDIS_DB"); redisDBStr != "" {
-		if db, err := strconv.Atoi(redisDBStr); err == nil {
-			redisDB = db
-		}
-	}
-
 	return Config{
-		DbUrl:               dbUrl,
-		Port:                port,
-		JwtSecret:           jwtSecret,
-		OPENAI_API_KEY:      OPENAI_API_KEY,
-		EMBEDDING_MODEL:     EMBEDDING_MODEL,
-		EMBEDDING_DIMENSION: EMBEDDING_DIMENSION,
-		ChatModel:           chatModel,
-		ChatTemperature:     chatTemperature,
-		MaxContextChunks:    maxContextChunks,
-		MinIOEndpoint:       minioEndpoint,
-		MinIOAccessKey:      minioAccessKey,
-		MinIOSecretKey:      minioSecretKey,
-		MinIOBucket:         minioBucket,
-		MinIOUseSSL:         minioUseSSL,
-		MaxUploadSizeMB:     maxUploadSizeMB,
-		RedisAddr:           redisAddr,
-		RedisPassword:       redisPassword,
-		RedisDB:             redisDB,
+		DatabaseURL:          getEnv("DATABASE_URL", true),
+		DatabaseMaxConns:     getEnvAsInt("DATABASE_MAX_CONNS", 25),
+		DatabaseMaxIdleConns: getEnvAsInt("DATABASE_MAX_IDLE_CONNS", 5),
+		Port:                 getEnv("PORT", false, "8080"),
+		JWTSecret:            getEnv("JWT_SECRET", true),
+		OpenAIAPIKey:         getEnv("OPENAI_API_KEY", true),
+		EmbeddingModel:       getEnv("EMBEDDING_MODEL", false, "text-embedding-3-small"),
+		EmbeddingDimension:   getEnvAsInt("EMBEDDING_DIMENSION", 1536),
+		ChatModel:            getEnv("OPENAI_CHAT_MODEL", false, "gpt-4o-mini"),
+		ChatTemperature:      getEnvAsFloat("CHAT_TEMPERATURE", 0.7),
+		MaxContextChunks:     getEnvAsInt("MAX_CONTEXT_CHUNKS", 5),
+		MinIOEndpoint:        getEnv("MINIO_ENDPOINT", true),
+		MinIOAccessKey:       getEnv("MINIO_ACCESS_KEY", true),
+		MinIOSecretKey:       getEnv("MINIO_SECRET_KEY", true),
+		MinIOBucket:          getEnv("MINIO_BUCKET", false, "texly-uploads"),
+		MinIOUseSSL:          getEnvAsBool("MINIO_USE_SSL", false),
+		MaxUploadSizeMB:      getEnvAsInt("MAX_UPLOAD_SIZE_MB", 100),
+		RedisURL:             getEnv("REDIS_URL", true),
 	}
+}
+
+func getEnv(key string, required bool, fallback ...string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		if required {
+			log.Fatalf("Fatal: Environment variable %s is required but not set", key)
+		}
+		if len(fallback) > 0 {
+			return fallback[0]
+		}
+	}
+	return value
+}
+
+func getEnvAsInt(key string, fallback int) int {
+	valueStr := os.Getenv(key)
+	if valueStr == "" {
+		return fallback
+	}
+	value, err := strconv.Atoi(valueStr)
+	if err != nil {
+		log.Printf("Warning: Invalid integer for %s: %s. Using default: %d", key, valueStr, fallback)
+		return fallback
+	}
+	return value
+}
+
+func getEnvAsFloat(key string, fallback float64) float64 {
+	valueStr := os.Getenv(key)
+	if valueStr == "" {
+		return fallback
+	}
+	value, err := strconv.ParseFloat(valueStr, 64)
+	if err != nil {
+		log.Printf("Warning: Invalid float for %s: %s. Using default: %f", key, valueStr, fallback)
+		return fallback
+	}
+	return value
+}
+
+func getEnvAsBool(key string, fallback bool) bool {
+	valueStr := os.Getenv(key)
+	if valueStr == "" {
+		return fallback
+	}
+	return valueStr == "true"
 }

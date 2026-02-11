@@ -32,7 +32,7 @@ func Auth(cfg configs.Config) gin.HandlerFunc {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method")
 			}
-			return []byte(cfg.JwtSecret), nil
+			return []byte(cfg.JWTSecret), nil
 		})
 
 		if err != nil || !token.Valid {

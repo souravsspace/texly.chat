@@ -15,7 +15,7 @@ import (
 
 func TestAuth(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	cfg := configs.Config{JwtSecret: "secret123"}
+	cfg := configs.Config{JWTSecret: "secret123"}
 
 	router := gin.New()
 	router.GET("/protected", middleware.Auth(cfg), func(c *gin.Context) {
@@ -43,7 +43,7 @@ func TestAuth(t *testing.T) {
 			"user_id": "user123",
 			"exp":     time.Now().Add(time.Hour).Unix(),
 		})
-		tokenString, _ := token.SignedString([]byte(cfg.JwtSecret))
+		tokenString, _ := token.SignedString([]byte(cfg.JWTSecret))
 
 		req, _ := http.NewRequest("GET", "/protected", nil)
 		req.Header.Set("Authorization", "Bearer "+tokenString)
@@ -57,7 +57,7 @@ func TestAuth(t *testing.T) {
 			"user_id": "user123",
 			"exp":     time.Now().Add(-time.Hour).Unix(),
 		})
-		tokenString, _ := token.SignedString([]byte(cfg.JwtSecret))
+		tokenString, _ := token.SignedString([]byte(cfg.JWTSecret))
 
 		req, _ := http.NewRequest("GET", "/protected", nil)
 		req.Header.Set("Authorization", "Bearer "+tokenString)

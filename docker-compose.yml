@@ -11,7 +11,7 @@ services:
       - "8080:8080"
     environment:
       - PORT=8080
-      - DATABASE_PATH=/app/data/prd.db
+      - DATABASE_URL=postgres://texly:${POSTGRES_PASSWORD:-texly_dev}@postgres:5432/texly?sslmode=disable
       - JWT_SECRET=${JWT_SECRET:-your-super-secret-key-change-this-in-production}
       - ENVIRONMENT=${ENVIRONMENT:-production}
       # OpenAI Configuration
@@ -30,12 +30,10 @@ services:
       # Upload Configuration
       - MAX_UPLOAD_SIZE_MB=${MAX_UPLOAD_SIZE_MB:-100}
       # Redis Configuration
-      - REDIS_ADDR=redis:6379
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
-      - REDIS_DB=${REDIS_DB:-0}
-    volumes:
-      - server-data:/app/data
+      - REDIS_URL=redis://${REDIS_PASSWORD}@redis:6379/0
     depends_on:
+      postgres:
+        condition: service_healthy
       storage:
         condition: service_healthy
       storage-init:
@@ -48,6 +46,27 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    networks:
+      - texly-internal
+    restart: unless-stopped
+
+  # PostgreSQL Database with pgvector extension
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: texly-postgres
+    environment:
+      - POSTGRES_DB=texly
+      - POSTGRES_USER=texly
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-texly_dev}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U texly"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - texly-internal
     restart: unless-stopped
@@ -114,7 +133,7 @@ services:
     restart: unless-stopped
 
 volumes:
-  server-data:
+  postgres-data:
     driver: local
   storage-data:
     driver: local

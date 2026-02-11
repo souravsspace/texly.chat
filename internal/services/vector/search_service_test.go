@@ -12,31 +12,38 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Helper to generate a valid 1536-dimension embedding for testing
+func generateTestEmbedding(seed float32) []float32 {
+	embedding := make([]float32, 1536)
+	for i := range embedding {
+		embedding[i] = seed + float32(i)*0.0001
+	}
+	return embedding
+}
+
 /*
-* TestNewSearchService tests service creation
+ * TestNewSearchService tests service creation
  */
 func TestNewSearchService(t *testing.T) {
 	gormDB := shared.SetupTestDB()
 	vRepo := vectorRepo.NewVectorRepository(gormDB)
-	embSvc := embedding.NewEmbeddingService("test-key", "test-model", 128)
+	embSvc := embedding.NewEmbeddingService("test-key", "test-model", 1536)
 
 	service := NewSearchService(gormDB, vRepo, embSvc)
 	assert.NotNil(t, service)
 }
 
 /*
-* TestSearchSimilarByEmbedding tests search functionality
+ * TestSearchSimilarByEmbedding tests search functionality
  */
 func TestSearchSimilarByEmbedding(t *testing.T) {
 	gormDB := shared.SetupTestDB()
 	vRepo := vectorRepo.NewVectorRepository(gormDB)
-	embSvc := embedding.NewEmbeddingService("test-key", "test-model", 2)
+	embSvc := embedding.NewEmbeddingService("test-key", "test-model", 1536)
 
 	ctx := context.Background()
-	err := vRepo.Initialize(ctx, 2)
-	if err != nil {
-		t.Skipf("Skipping test - sqlite-vec extension not available: %v", err)
-	}
+	err := vRepo.Initialize(ctx, 1536)
+	require.NoError(t, err)
 
 	// Create test bot
 	bot := models.Bot{
@@ -79,21 +86,18 @@ func TestSearchSimilarByEmbedding(t *testing.T) {
 
 	// Insert embeddings
 	data := []vectorRepo.VectorData{
-		{ChunkID: "chunk-1", Embedding: []float32{0.9, 0.1}},
-		{ChunkID: "chunk-2", Embedding: []float32{0.1, 0.9}},
+		{ChunkID: "chunk-1", Embedding: generateTestEmbedding(0.9)},
+		{ChunkID: "chunk-2", Embedding: generateTestEmbedding(0.1)},
 	}
 
 	err = vRepo.BulkInsertEmbeddings(ctx, data)
-	if err != nil {
-		t.Logf("Skipping search test without sqlite-vec: %v", err)
-		return
-	}
+	require.NoError(t, err)
 
 	// Create search service
 	service := NewSearchService(gormDB, vRepo, embSvc)
 
 	// Search with embedding similar to chunk-1
-	queryEmbedding := []float32{0.8, 0.2}
+	queryEmbedding := generateTestEmbedding(0.85)
 	results, err := service.SearchSimilarByEmbedding(ctx, queryEmbedding, "bot-1", 5)
 
 	require.NoError(t, err)
@@ -109,23 +113,21 @@ func TestSearchSimilarByEmbedding(t *testing.T) {
 }
 
 /*
-* TestSearchSimilar_EmptyResults tests behavior with no matches
+ * TestSearchSimilar_EmptyResults tests behavior with no matches
  */
 func TestSearchSimilar_EmptyResults(t *testing.T) {
 	gormDB := shared.SetupTestDB()
 	vRepo := vectorRepo.NewVectorRepository(gormDB)
-	embSvc := embedding.NewEmbeddingService("test-key", "test-model", 2)
+	embSvc := embedding.NewEmbeddingService("test-key", "test-model", 1536)
 
 	ctx := context.Background()
-	err := vRepo.Initialize(ctx, 2)
-	if err != nil {
-		t.Skipf("Skipping test - sqlite-vec extension not available: %v", err)
-	}
+	err := vRepo.Initialize(ctx, 1536)
+	require.NoError(t, err)
 
 	service := NewSearchService(gormDB, vRepo, embSvc)
 
 	// Search with no data
-	queryEmbedding := []float32{0.5, 0.5}
+	queryEmbedding := generateTestEmbedding(0.5)
 	results, err := service.SearchSimilarByEmbedding(ctx, queryEmbedding, "non-existent-bot", 5)
 
 	// Should not error, just return empty results
@@ -134,18 +136,16 @@ func TestSearchSimilar_EmptyResults(t *testing.T) {
 }
 
 /*
-* TestSearchMultipleBots tests cross-bot search
+ * TestSearchMultipleBots tests bot-specific search
  */
 func TestSearchMultipleBots(t *testing.T) {
 	gormDB := shared.SetupTestDB()
 	vRepo := vectorRepo.NewVectorRepository(gormDB)
-	embSvc := embedding.NewEmbeddingService("test-key", "test-model", 2)
+	embSvc := embedding.NewEmbeddingService("test-key", "test-model", 1536)
 
 	ctx := context.Background()
-	err := vRepo.Initialize(ctx, 2)
-	if err != nil {
-		t.Skipf("Skipping test - sqlite-vec extension not available: %v", err)
-	}
+	err := vRepo.Initialize(ctx, 1536)
+	require.NoError(t, err)
 
 	// Create multiple bots and sources
 	bot1 := models.Bot{ID: "bot-1", Name: "Bot 1"}
@@ -168,21 +168,17 @@ func TestSearchMultipleBots(t *testing.T) {
 
 	// Insert embeddings
 	data := []vectorRepo.VectorData{
-		{ChunkID: "chunk-1", Embedding: []float32{0.7, 0.3}},
-		{ChunkID: "chunk-2", Embedding: []float32{0.6, 0.4}},
+		{ChunkID: "chunk-1", Embedding: generateTestEmbedding(0.7)},
+		{ChunkID: "chunk-2", Embedding: generateTestEmbedding(0.6)},
 	}
 
 	err = vRepo.BulkInsertEmbeddings(ctx, data)
-	if err != nil {
-		t.Logf("Skipping multi-bot search test without sqlite-vec: %v", err)
-		return
-	}
+	require.NoError(t, err)
 
 	service := NewSearchService(gormDB, vRepo, embSvc)
 
-	// Search across both bots - note: can't actually call SearchMultipleBots without real embedding API
-	// Just verify the function exists and is callable
-	queryEmbedding := []float32{0.65, 0.35}
+	// Search for bot-1 only
+	queryEmbedding := generateTestEmbedding(0.65)
 	results, err := service.SearchSimilarByEmbedding(ctx, queryEmbedding, "bot-1", 5)
 
 	require.NoError(t, err)

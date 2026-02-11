@@ -25,9 +25,7 @@ func setupTestRateLimiter(t *testing.T) (*RateLimiter, *gorm.DB, func()) {
 
 	// Create config with miniredis address
 	cfg := configs.Config{
-		RedisAddr:     mr.Addr(),
-		RedisPassword: "",
-		RedisDB:       0,
+		RedisURL: "redis://" + mr.Addr(),
 	}
 
 	// Create rate limiter
@@ -56,9 +54,7 @@ func TestNewRateLimiter_InvalidRedis(t *testing.T) {
 	db := shared.SetupTestDB()
 
 	cfg := configs.Config{
-		RedisAddr:     "invalid:9999",
-		RedisPassword: "",
-		RedisDB:       0,
+		RedisURL: "redis://invalid:9999",
 	}
 
 	rateLimiter, err := NewRateLimiter(cfg, db)

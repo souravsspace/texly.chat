@@ -114,7 +114,8 @@ func (q *InMemoryQueue) worker(ctx context.Context, handler JobHandler, workerID
  */
 func (q *InMemoryQueue) Stop() {
 	q.cancel()
-	close(q.jobs)
+	// Don't close the channel here - context cancellation is sufficient
+	// Closing the channel would cause panic if Enqueue is called after Stop
 	q.wg.Wait()
 	fmt.Println("All workers stopped")
 }

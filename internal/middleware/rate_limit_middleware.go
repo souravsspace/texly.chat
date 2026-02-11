@@ -37,12 +37,13 @@ func DefaultRateLimitConfig() RateLimitConfig {
 
 // NewRateLimiter creates a new rate limiter with Redis backend
 func NewRateLimiter(cfg configs.Config, db *gorm.DB) (*RateLimiter, error) {
-	// Connect to Redis
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     cfg.RedisAddr,
-		Password: cfg.RedisPassword,
-		DB:       cfg.RedisDB,
-	})
+	// Connect to Redis using RedisURL
+	opt, err := redis.ParseURL(cfg.RedisURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse Redis URL: %w", err)
+	}
+
+	rdb := redis.NewClient(opt)
 
 	// Test connection
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

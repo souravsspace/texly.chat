@@ -171,8 +171,16 @@ func TestGetDailyStats(t *testing.T) {
 	}
 
 	// Get daily stats for today
-	today := time.Now()
-	startDate := time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, time.UTC)
+	// Use database time (UTC) to ensure timezone consistency
+	var dbNow time.Time
+	db.Raw("SELECT CURRENT_TIMESTAMP").Scan(&dbNow)
+	
+	// Convert to UTC before extracting date components
+	// This is crucial because Postgres returns time in session timezone (e.g. +0600)
+	// If we take the local day (12th) and treat it as UTC day, we might miss messages
+	// that happened on the 11th in UTC terms.
+	dbNow = dbNow.UTC()
+	startDate := time.Date(dbNow.Year(), dbNow.Month(), dbNow.Day(), 0, 0, 0, 0, time.UTC)
 	endDate := startDate.AddDate(0, 0, 1)
 
 	stats, err := repo.GetDailyStats(ctx, botID, startDate, endDate)

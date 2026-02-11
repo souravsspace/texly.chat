@@ -70,15 +70,15 @@ func (r *MessageRepository) GetDailyStats(ctx context.Context, botID string, sta
 	query := `
 		SELECT 
 			bot_id,
-			datetime(DATE(created_at)) as date,
+			TO_CHAR(DATE(created_at), 'YYYY-MM-DD') as date,
 			COUNT(*) as message_count,
 			SUM(token_count) as total_tokens,
 			SUM(CASE WHEN role = 'user' THEN 1 ELSE 0 END) as user_messages,
 			SUM(CASE WHEN role = 'assistant' THEN 1 ELSE 0 END) as bot_messages,
 			COUNT(DISTINCT session_id) as unique_session
 		FROM messages
-		WHERE bot_id = ?
-		AND created_at BETWEEN ? AND ?
+		WHERE bot_id = $1
+		AND created_at BETWEEN $2 AND $3
 		AND deleted_at IS NULL
 		GROUP BY bot_id, DATE(created_at)
 		ORDER BY date DESC
@@ -147,12 +147,12 @@ func (r *MessageRepository) GetBotAnalytics(ctx context.Context, botID string) (
 			COUNT(*) as total_messages,
 			SUM(token_count) as total_tokens,
 			COUNT(DISTINCT session_id) as total_sessions,
-			CAST(COUNT(*) AS FLOAT) / NULLIF(JULIANDAY(MAX(created_at)) - JULIANDAY(MIN(created_at)), 0) as avg_messages_per_day,
-			CAST(SUM(token_count) AS FLOAT) / NULLIF(JULIANDAY(MAX(created_at)) - JULIANDAY(MIN(created_at)), 0) as avg_tokens_per_day,
+			CAST(COUNT(*) AS FLOAT) / NULLIF(EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))) / 86400, 0) as avg_messages_per_day,
+			CAST(SUM(token_count) AS FLOAT) / NULLIF(EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))) / 86400, 0) as avg_tokens_per_day,
 			CAST(COUNT(*) AS FLOAT) / NULLIF(COUNT(DISTINCT session_id), 0) as avg_messages_session,
-			MAX(created_at) as last_message_at
+			TO_CHAR(MAX(created_at), 'YYYY-MM-DD HH24:MI:SS') as last_message_at
 		FROM messages
-		WHERE bot_id = ?
+		WHERE bot_id = $1
 		AND deleted_at IS NULL
 		GROUP BY bot_id
 	`
@@ -214,13 +214,13 @@ func (r *MessageRepository) GetUserAnalytics(ctx context.Context, userID string)
 			COUNT(*) as total_messages,
 			SUM(m.token_count) as total_tokens,
 			COUNT(DISTINCT m.session_id) as total_sessions,
-			CAST(COUNT(*) AS FLOAT) / NULLIF(JULIANDAY(MAX(m.created_at)) - JULIANDAY(MIN(m.created_at)), 0) as avg_messages_per_day,
-			CAST(SUM(m.token_count) AS FLOAT) / NULLIF(JULIANDAY(MAX(m.created_at)) - JULIANDAY(MIN(m.created_at)), 0) as avg_tokens_per_day,
+			CAST(COUNT(*) AS FLOAT) / NULLIF(EXTRACT(EPOCH FROM (MAX(m.created_at) - MIN(m.created_at))) / 86400, 0) as avg_messages_per_day,
+			CAST(SUM(m.token_count) AS FLOAT) / NULLIF(EXTRACT(EPOCH FROM (MAX(m.created_at) - MIN(m.created_at))) / 86400, 0) as avg_tokens_per_day,
 			CAST(COUNT(*) AS FLOAT) / NULLIF(COUNT(DISTINCT m.session_id), 0) as avg_messages_session,
-			MAX(m.created_at) as last_message_at
+			TO_CHAR(MAX(m.created_at), 'YYYY-MM-DD HH24:MI:SS') as last_message_at
 		FROM messages m
 		INNER JOIN bots b ON m.bot_id = b.id
-		WHERE b.user_id = ?
+		WHERE b.user_id = $1
 		AND m.deleted_at IS NULL
 		AND b.deleted_at IS NULL
 		GROUP BY m.bot_id

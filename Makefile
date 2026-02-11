@@ -39,6 +39,7 @@ install:
 	@echo "Installing dependencies..."
 	@go mod download
 	@cd ui && bun install
+	@cd widget && bun install
 	@echo "✓ Dependencies installed"
 
 # Clean build artifacts
@@ -49,7 +50,7 @@ clean:
 
 # Run tests
 test:
-	@go test -v ./...
+	@go test -v -p 1 ./...
 
 # Run tests with coverage
 test-coverage:

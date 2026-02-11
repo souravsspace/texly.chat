@@ -14,17 +14,21 @@ import (
 func main() {
 	cfg := configs.Load()
 
-	gormDb, err := db.Connect(cfg.DbUrl)
+	gormDb, err := db.Connect(cfg.DatabaseURL)
 	if err != nil {
 		log.Fatalf("failed to connect db: %v", err)
 	}
 
+	// Configure connection pool from config
+	sqlDB, err := gormDb.DB()
+	if err != nil {
+		log.Fatalf("failed to get underlying DB: %v", err)
+	}
+	sqlDB.SetMaxOpenConns(cfg.DatabaseMaxConns)
+	sqlDB.SetMaxIdleConns(cfg.DatabaseMaxIdleConns)
+
 	if err := db.Migrate(gormDb); err != nil {
 		log.Fatalf("failed to migrate db: %v", err)
-	}
-
-	if err := db.InitializeVectorTables(gormDb, cfg.EMBEDDING_DIMENSION); err != nil {
-		log.Printf("warning: failed to initialize vector tables: %v", err)
 	}
 
 	srv := server.New(gormDb, cfg)

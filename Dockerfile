@@ -33,7 +33,6 @@ FROM golang:1.25-bookworm AS go-builder
 RUN apt-get update && apt-get install -y \
     gcc \
     libc6-dev \
-    libsqlite3-dev \
     git \
     && rm -rf /var/lib/apt/lists/*
 
@@ -71,14 +70,11 @@ FROM debian:bookworm-slim
 # Install only essential runtime dependencies
 RUN apt-get update && apt-get install -y \
     ca-certificates \
-    sqlite3 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Create data directory for SQLite database
-RUN mkdir -p /app/data && \
-    useradd -m -U appuser && \
+RUN useradd -m -U appuser && \
     chown -R appuser:appuser /app
 
 # Copy only the binary from builder

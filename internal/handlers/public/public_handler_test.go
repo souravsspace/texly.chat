@@ -14,9 +14,10 @@ import (
 	"github.com/souravsspace/texly.chat/internal/services/session"
 	"github.com/souravsspace/texly.chat/internal/shared"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 )
 
-func setupTestHandler() (*PublicHandler, *gin.Engine, *botRepo.BotRepo) {
+func setupTestHandler() (*PublicHandler, *gin.Engine, *botRepo.BotRepo, *gorm.DB) {
 	gin.SetMode(gin.TestMode)
 	testDB := shared.SetupTestDB()
 	
@@ -26,11 +27,11 @@ func setupTestHandler() (*PublicHandler, *gin.Engine, *botRepo.BotRepo) {
 	handler := NewPublicHandler(repo, sessionService, nil) // chatService is nil for these tests
 	router := gin.New()
 	
-	return handler, router, repo
+	return handler, router, repo, testDB
 }
 
 func TestPublicHandler_GetWidgetConfig(t *testing.T) {
-	handler, router, repo := setupTestHandler()
+	handler, router, repo, db := setupTestHandler()
 	router.GET("/api/public/bots/:id/config", handler.GetWidgetConfig)
 
 	// Create a test bot with widget config
@@ -51,7 +52,7 @@ func TestPublicHandler_GetWidgetConfig(t *testing.T) {
 		WidgetConfig: string(widgetConfigJSON),
 	}
 	repo.Create(bot)
-	defer shared.SetupTestDB().Unscoped().Delete(bot)
+	defer db.Unscoped().Delete(bot)
 
 	// Test successful config retrieval
 	req := httptest.NewRequest("GET", "/api/public/bots/"+botID+"/config", nil)
@@ -69,7 +70,7 @@ func TestPublicHandler_GetWidgetConfig(t *testing.T) {
 }
 
 func TestPublicHandler_GetWidgetConfig_NotFound(t *testing.T) {
-	handler, router, _ := setupTestHandler()
+	handler, router, _, _ := setupTestHandler()
 	router.GET("/api/public/bots/:id/config", handler.GetWidgetConfig)
 
 	req := httptest.NewRequest("GET", "/api/public/bots/non-existent-id/config", nil)
@@ -80,7 +81,7 @@ func TestPublicHandler_GetWidgetConfig_NotFound(t *testing.T) {
 }
 
 func TestPublicHandler_GetWidgetConfig_DefaultConfig(t *testing.T) {
-	handler, router, repo := setupTestHandler()
+	handler, router, repo, db := setupTestHandler()
 	router.GET("/api/public/bots/:id/config", handler.GetWidgetConfig)
 
 	// Create a bot without widget config
@@ -92,7 +93,7 @@ func TestPublicHandler_GetWidgetConfig_DefaultConfig(t *testing.T) {
 		SystemPrompt: "Test prompt",
 	}
 	repo.Create(bot)
-	defer shared.SetupTestDB().Unscoped().Delete(bot)
+	defer db.Unscoped().Delete(bot)
 
 	req := httptest.NewRequest("GET", "/api/public/bots/"+botID+"/config", nil)
 	w := httptest.NewRecorder()
@@ -110,7 +111,7 @@ func TestPublicHandler_GetWidgetConfig_DefaultConfig(t *testing.T) {
 }
 
 func TestPublicHandler_CreateSession(t *testing.T) {
-	handler, router, repo := setupTestHandler()
+	handler, router, repo, db := setupTestHandler()
 	router.POST("/api/public/chats", handler.CreateSession)
 
 	// Create a test bot
@@ -122,7 +123,7 @@ func TestPublicHandler_CreateSession(t *testing.T) {
 		SystemPrompt: "Test prompt",
 	}
 	repo.Create(bot)
-	defer shared.SetupTestDB().Unscoped().Delete(bot)
+	defer db.Unscoped().Delete(bot)
 
 	// Test session creation
 	reqBody := models.CreateSessionRequest{
@@ -146,7 +147,7 @@ func TestPublicHandler_CreateSession(t *testing.T) {
 }
 
 func TestPublicHandler_CreateSession_BotNotFound(t *testing.T) {
-	handler, router, _ := setupTestHandler()
+	handler, router, _, _ := setupTestHandler()
 	router.POST("/api/public/chats", handler.CreateSession)
 
 	reqBody := models.CreateSessionRequest{
@@ -163,7 +164,7 @@ func TestPublicHandler_CreateSession_BotNotFound(t *testing.T) {
 }
 
 func TestPublicHandler_CreateSession_InvalidRequest(t *testing.T) {
-	handler, router, _ := setupTestHandler()
+	handler, router, _, _ := setupTestHandler()
 	router.POST("/api/public/chats", handler.CreateSession)
 
 	// Send invalid JSON
@@ -176,7 +177,7 @@ func TestPublicHandler_CreateSession_InvalidRequest(t *testing.T) {
 }
 
 func TestPublicHandler_StreamChatPublic_SessionNotFound(t *testing.T) {
-	handler, router, _ := setupTestHandler()
+	handler, router, _, _ := setupTestHandler()
 	router.POST("/api/public/chats/:session_id/messages", handler.StreamChatPublic)
 
 	reqBody := models.ChatRequest{
@@ -193,7 +194,7 @@ func TestPublicHandler_StreamChatPublic_SessionNotFound(t *testing.T) {
 }
 
 func TestPublicHandler_StreamChatPublic_InvalidRequest(t *testing.T) {
-	handler, router, repo := setupTestHandler()
+	handler, router, repo, db := setupTestHandler()
 	router.POST("/api/public/chats/:session_id/messages", handler.StreamChatPublic)
 
 	// Create bot and session
@@ -205,7 +206,7 @@ func TestPublicHandler_StreamChatPublic_InvalidRequest(t *testing.T) {
 		SystemPrompt: "Test prompt",
 	}
 	repo.Create(bot)
-	defer shared.SetupTestDB().Unscoped().Delete(bot)
+	defer db.Unscoped().Delete(bot)
 
 	chatSession := handler.sessionService.CreateSession(botID)
 
