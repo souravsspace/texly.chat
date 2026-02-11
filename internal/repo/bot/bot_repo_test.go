@@ -28,7 +28,7 @@ func TestBotRepo_Create(t *testing.T) {
 	var count int64
 	testDB.Model(&models.Bot{}).Where("id = ?", bot.ID).Count(&count)
 	assert.Equal(t, int64(1), count)
-	
+
 	// Cleanup
 	testDB.Unscoped().Delete(bot)
 }
@@ -60,7 +60,7 @@ func TestBotRepo_GetByUserID(t *testing.T) {
 	repo.Create(bot1)
 	repo.Create(bot2)
 	repo.Create(otherBot)
-	
+
 	// Cleanup at end
 	defer func() {
 		testDB.Unscoped().Delete(bot1)
@@ -72,7 +72,7 @@ func TestBotRepo_GetByUserID(t *testing.T) {
 	bots, err := repo.GetByUserID(userID)
 	assert.NoError(t, err)
 	assert.Len(t, bots, 2)
-	
+
 	// Verify contents (names should match)
 	names := []string{bots[0].Name, bots[1].Name}
 	assert.Contains(t, names, "Bot 1")
@@ -138,9 +138,9 @@ func TestBotRepo_Delete(t *testing.T) {
 
 	userID := "user-1"
 	bot := &models.Bot{
-		ID:           uuid.New().String(),
-		UserID:       userID,
-		Name:         "To Delete",
+		ID:     uuid.New().String(),
+		UserID: userID,
+		Name:   "To Delete",
 	}
 	repo.Create(bot)
 

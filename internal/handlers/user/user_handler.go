@@ -16,12 +16,12 @@ type UserHandler struct {
 
 /*
 * NewUserHandler creates a new UserHandler instance
-*/
+ */
 func NewUserHandler(ur *repo.UserRepo) *UserHandler { return &UserHandler{repo: ur} }
 
 /*
 * GetMe handles retrieval of the current authenticated user
-*/
+ */
 func (h *UserHandler) GetMe(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {

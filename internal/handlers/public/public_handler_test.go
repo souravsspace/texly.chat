@@ -20,13 +20,13 @@ import (
 func setupTestHandler() (*PublicHandler, *gin.Engine, *botRepo.BotRepo, *gorm.DB) {
 	gin.SetMode(gin.TestMode)
 	testDB := shared.SetupTestDB()
-	
+
 	repo := botRepo.NewBotRepo(testDB)
 	sessionService := session.NewSessionService()
-	
+
 	handler := NewPublicHandler(repo, sessionService, nil) // chatService is nil for these tests
 	router := gin.New()
-	
+
 	return handler, router, repo, testDB
 }
 
@@ -63,7 +63,7 @@ func TestPublicHandler_GetWidgetConfig(t *testing.T) {
 
 	var response map[string]interface{}
 	json.Unmarshal(w.Body.Bytes(), &response)
-	
+
 	assert.Equal(t, botID, response["id"])
 	assert.Equal(t, "Test Widget Bot", response["name"])
 	assert.NotNil(t, response["widget_config"])
@@ -103,7 +103,7 @@ func TestPublicHandler_GetWidgetConfig_DefaultConfig(t *testing.T) {
 
 	var response map[string]interface{}
 	json.Unmarshal(w.Body.Bytes(), &response)
-	
+
 	widgetConfig := response["widget_config"].(map[string]interface{})
 	assert.Equal(t, "#6366f1", widgetConfig["theme_color"])
 	assert.Equal(t, "Hi! How can I help you today?", widgetConfig["initial_message"])
@@ -140,7 +140,7 @@ func TestPublicHandler_CreateSession(t *testing.T) {
 
 	var response models.SessionResponse
 	json.Unmarshal(w.Body.Bytes(), &response)
-	
+
 	assert.NotEmpty(t, response.SessionID)
 	assert.Equal(t, botID, response.BotID)
 	assert.False(t, response.ExpiresAt.IsZero())

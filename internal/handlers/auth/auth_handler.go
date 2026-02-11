@@ -24,14 +24,14 @@ type AuthHandler struct {
 
 /*
 * NewAuthHandler creates a new AuthHandler instance
-*/
+ */
 func NewAuthHandler(ur *repo.UserRepo, cfg configs.Config) *AuthHandler {
 	return &AuthHandler{userRepo: ur, cfg: cfg}
 }
 
 /*
 * Signup handles user registration
-*/
+ */
 func (h *AuthHandler) Signup(c *gin.Context) {
 	var req models.SignupRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -60,6 +60,7 @@ func (h *AuthHandler) Signup(c *gin.Context) {
 		Email:        req.Email,
 		PasswordHash: string(hashedPassword),
 		Name:         req.Name,
+		AuthProvider: "email",
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
@@ -84,7 +85,7 @@ func (h *AuthHandler) Signup(c *gin.Context) {
 
 /*
 * Login handles user authentication
-*/
+ */
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req models.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -121,7 +122,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 /*
 * generateToken creates a JWT token for a user
-*/
+ */
 func (h *AuthHandler) generateToken(userID string) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID,

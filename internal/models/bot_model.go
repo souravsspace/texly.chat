@@ -26,7 +26,7 @@ type Bot struct {
 	Name           string         `json:"name" gorm:"not null"`
 	SystemPrompt   string         `json:"system_prompt"`
 	AllowedOrigins string         `json:"allowed_origins" gorm:"type:text"` // JSON array of whitelisted domains
-	WidgetConfig   string          `json:"widget_config" gorm:"type:text"`   // JSON-encoded WidgetConfig
+	WidgetConfig   string         `json:"widget_config" gorm:"type:text"`   // JSON-encoded WidgetConfig
 	CreatedAt      time.Time      `json:"created_at"`
 	UpdatedAt      time.Time      `json:"updated_at"`
 	DeletedAt      gorm.DeletedAt `json:"deleted_at" gorm:"index"`
@@ -49,7 +49,7 @@ type CreateBotRequest struct {
 	Name           string        `json:"name" binding:"required"`
 	SystemPrompt   string        `json:"system_prompt"`
 	AllowedOrigins []string      `json:"allowed_origins"` // Optional: whitelisted domains for widget
-	WidgetConfig   *WidgetConfig   `json:"widget_config"`   // Optional: widget configuration
+	WidgetConfig   *WidgetConfig `json:"widget_config"`   // Optional: widget configuration
 }
 
 /*
@@ -59,5 +59,5 @@ type UpdateBotRequest struct {
 	Name           string        `json:"name"`
 	SystemPrompt   string        `json:"system_prompt"`
 	AllowedOrigins []string      `json:"allowed_origins"` // Optional: whitelisted domains for widget
-	WidgetConfig   *WidgetConfig   `json:"widget_config"`   // Optional: widget configuration
+	WidgetConfig   *WidgetConfig `json:"widget_config"`   // Optional: widget configuration
 }

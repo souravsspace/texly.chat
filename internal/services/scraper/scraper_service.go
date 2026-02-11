@@ -60,7 +60,7 @@ func (s *ScraperService) FetchAndClean(url string) (string, error) {
 	c.OnHTML("main, article, [role=main]", func(e *colly.HTMLElement) {
 		// Remove unwanted elements
 		e.DOM.Find("script, style, nav, header, footer, aside, .navigation, .menu, .sidebar, .ad, .advertisement").Remove()
-		
+
 		text := strings.TrimSpace(e.Text)
 		if text != "" {
 			content.WriteString(text)
@@ -73,7 +73,7 @@ func (s *ScraperService) FetchAndClean(url string) (string, error) {
 		if content.Len() == 0 {
 			// Remove unwanted elements
 			e.DOM.Find("script, style, nav, header, footer, aside, .navigation, .menu, .sidebar, .ad, .advertisement").Remove()
-			
+
 			text := strings.TrimSpace(e.Text)
 			if text != "" {
 				content.WriteString(text)
@@ -125,13 +125,13 @@ func cleanWhitespace(text string) string {
 	// Replace multiple newlines with double newline
 	lines := strings.Split(text, "\n")
 	var cleaned []string
-	
+
 	for _, line := range lines {
 		trimmed := strings.TrimSpace(line)
 		if trimmed != "" {
 			cleaned = append(cleaned, trimmed)
 		}
 	}
-	
+
 	return strings.Join(cleaned, "\n")
 }

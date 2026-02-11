@@ -64,16 +64,16 @@ func TestTextReader_ReadTextFile(t *testing.T) {
 
 func TestTextReader_ReadTextFile_LargeContent(t *testing.T) {
 	reader := NewTextReader()
-	
+
 	// Create large content (1MB)
 	largeContent := strings.Repeat("This is a line of text.\n", 50000)
 	r := strings.NewReader(largeContent)
-	
+
 	text, err := reader.ReadTextFile(r)
 	if err != nil {
 		t.Errorf("ReadTextFile() failed on large content: %v", err)
 	}
-	
+
 	if len(text) == 0 {
 		t.Error("ReadTextFile() returned empty text for large content")
 	}

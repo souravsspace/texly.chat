@@ -229,7 +229,7 @@ func TestDeleteByChunkID(t *testing.T) {
 }
 
 /*
- * TestExists tests existence checking  
+ * TestExists tests existence checking
  */
 func TestExists(t *testing.T) {
 	gormDB := shared.SetupTestDB()

@@ -174,7 +174,7 @@ func TestGetDailyStats(t *testing.T) {
 	// Use database time (UTC) to ensure timezone consistency
 	var dbNow time.Time
 	db.Raw("SELECT CURRENT_TIMESTAMP").Scan(&dbNow)
-	
+
 	// Convert to UTC before extracting date components
 	// This is crucial because Postgres returns time in session timezone (e.g. +0600)
 	// If we take the local day (12th) and treat it as UTC day, we might miss messages

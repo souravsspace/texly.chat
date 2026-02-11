@@ -149,7 +149,7 @@ func GetContentType(filename string) string {
 		".xls":  "application/vnd.ms-excel",
 		".csv":  "text/csv",
 	}
-	
+
 	if ct, ok := contentTypes[ext]; ok {
 		return ct
 	}

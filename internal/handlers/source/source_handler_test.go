@@ -32,7 +32,7 @@ func setupRouter(db *gorm.DB, jobQueue queue.JobQueue) *gin.Engine {
 	r := gin.Default()
 	sRepo := sourceRepo.NewSourceRepo(db)
 	bRepo := botRepo.NewBotRepo(db)
-	
+
 	// Create a mock MinIO storage service (will fail to connect but that's OK for these tests)
 	// For URL source tests, we don't actually use storage
 	storageService, _ := storage.NewMinIOStorageService(
@@ -43,7 +43,7 @@ func setupRouter(db *gorm.DB, jobQueue queue.JobQueue) *gin.Engine {
 		false,
 		100,
 	)
-	
+
 	handler := source.NewSourceHandler(sRepo, bRepo, jobQueue, storageService, 100)
 
 	// Mock Auth middleware

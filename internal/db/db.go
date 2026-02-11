@@ -62,4 +62,3 @@ func Migrate(db *gorm.DB) error {
 	fmt.Println("✅ Database migrations completed successfully")
 	return nil
 }
-

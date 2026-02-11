@@ -193,6 +193,6 @@ func TestInMemoryQueue_ContextCancellation(t *testing.T) {
 
 	// Should have processed at least one but workers should stop
 	assert.GreaterOrEqual(t, count, 0)
-	
+
 	queue.Stop()
 }

@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"github.com/souravsspace/texly.chat/configs"
 	analyticsHandlerPkg "github.com/souravsspace/texly.chat/internal/handlers/analytics"
 	"github.com/souravsspace/texly.chat/internal/handlers/auth"
@@ -27,6 +28,7 @@ import (
 	"github.com/souravsspace/texly.chat/internal/services/analytics"
 	"github.com/souravsspace/texly.chat/internal/services/chat"
 	"github.com/souravsspace/texly.chat/internal/services/embedding"
+	"github.com/souravsspace/texly.chat/internal/services/oauth"
 	"github.com/souravsspace/texly.chat/internal/services/session"
 	"github.com/souravsspace/texly.chat/internal/services/storage"
 	"github.com/souravsspace/texly.chat/internal/services/vector"
@@ -77,7 +79,25 @@ func (s *Server) Run() error {
 	/*
 	* Queue and Worker
 	 */
+	/*
+	* Queue and Worker
+	 */
 	jobQueue := queue.NewInMemoryQueue(100, 3) // buffer: 100, workers: 3
+
+	/*
+	* Redis Client
+	 */
+	opt, err := redis.ParseURL(s.cfg.RedisURL)
+	if err != nil {
+		return fmt.Errorf("failed to parse Redis URL: %w", err)
+	}
+	redisClient := redis.NewClient(opt)
+
+	/*
+	* OAuth Services
+	 */
+	oauthStateService := oauth.NewStateService(redisClient)
+	oauthService := oauth.NewOAuthService(s.cfg, s.db)
 
 	// Initialize MinIO storage service
 	storageService, err := storage.NewMinIOStorageService(
@@ -143,7 +163,11 @@ func (s *Server) Run() error {
 	/*
 	* Handlers
 	 */
+	/*
+	* Handlers
+	 */
 	authHandler := auth.NewAuthHandler(userRepo, s.cfg)
+	googleHandler := auth.NewGoogleHandler(oauthService, oauthStateService, s.cfg)
 	userHandler := userHandlerPkg.NewUserHandler(userRepo)
 	sourceHandler := sourceHandlerPkg.NewSourceHandler(sourceRepo, botRepo, jobQueue, storageService, s.cfg.MaxUploadSizeMB)
 	analyticsService := analytics.NewAnalyticsService(messageRepo)
@@ -174,7 +198,10 @@ func (s *Server) Run() error {
 		* Auth routes
 		 */
 		apiGroup.POST("/auth/signup", authHandler.Signup)
+		apiGroup.POST("/auth/signup", authHandler.Signup)
 		apiGroup.POST("/auth/login", authHandler.Login)
+		apiGroup.GET("/auth/google", googleHandler.GoogleLogin)
+		apiGroup.GET("/auth/google/callback", googleHandler.GoogleCallback)
 
 		/*
 		* User routes

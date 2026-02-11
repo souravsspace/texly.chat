@@ -1,7 +1,7 @@
 # Phase 6: Authentication Enhancement (OAuth)
 
 ## Goal
-Add Google and GitHub OAuth 2.0 authentication for improved user onboarding and reduced signup friction.
+Add Google OAuth 2.0 authentication for improved user onboarding and reduced signup friction.
 
 ---
 
@@ -10,38 +10,28 @@ Add Google and GitHub OAuth 2.0 authentication for improved user onboarding and 
 ### Step 1: OAuth Dependencies & Configuration
 
 #### 1.1 Add OAuth Libraries
-- [ ] Add `golang.org/x/oauth2` to `go.mod`
-- [ ] Add `golang.org/x/oauth2/google` for Google OAuth
-- [ ] Add `github.com/google/go-github/v58` for GitHub API
+- [x] Add `golang.org/x/oauth2` to `go.mod`
+- [x] Add `golang.org/x/oauth2/google` for Google OAuth
 
 #### 1.2 Update Configuration
-- [ ] Add OAuth config to `configs/config.go`:
+- [x] Add OAuth config to `configs/config.go`:
   ```go
   // Google OAuth
   GoogleClientID     string
   GoogleClientSecret string
   GoogleRedirectURL  string // e.g., http://localhost:8080/api/auth/google/callback
-  
-  // GitHub OAuth
-  GitHubClientID     string
-  GitHubClientSecret string
-  GitHubRedirectURL  string // e.g., http://localhost:8080/api/auth/github/callback
-  
+
   // Frontend URL for redirects
   FrontendURL string // e.g., http://localhost:3000
   ```
 
 #### 1.3 Environment Variables
-- [ ] Add to `.env.local`:
+- [x] Add to `.env.local`:
   ```
   GOOGLE_CLIENT_ID=your-google-client-id
   GOOGLE_CLIENT_SECRET=your-google-client-secret
   GOOGLE_REDIRECT_URL=http://localhost:8080/api/auth/google/callback
-  
-  GITHUB_CLIENT_ID=your-github-client-id
-  GITHUB_CLIENT_SECRET=your-github-client-secret
-  GITHUB_REDIRECT_URL=http://localhost:8080/api/auth/github/callback
-  
+
   FRONTEND_URL=http://localhost:3000
   ```
 
@@ -50,7 +40,7 @@ Add Google and GitHub OAuth 2.0 authentication for improved user onboarding and 
 ### Step 2: Update User Model
 
 #### 2.1 Add OAuth Fields
-- [ ] Update `internal/models/user_model.go`:
+- [x] Update `internal/models/user_model.go`:
   ```go
   type User struct {
       ID       string `json:"id" gorm:"primaryKey"`
@@ -61,8 +51,7 @@ Add Google and GitHub OAuth 2.0 authentication for improved user onboarding and 
       
       // OAuth fields
       GoogleID  string `json:"google_id" gorm:"uniqueIndex"`
-      GitHubID  int64  `json:"github_id" gorm:"uniqueIndex"`
-      AuthProvider string `json:"auth_provider"` // "email", "google", "github"
+      AuthProvider string `json:"auth_provider"` // "email", "google"
       
       // Existing fields...
       CreatedAt time.Time      `json:"created_at"`
@@ -70,72 +59,53 @@ Add Google and GitHub OAuth 2.0 authentication for improved user onboarding and 
       DeletedAt gorm.DeletedAt `json:"deleted_at" gorm:"index"`
   }
   ```
-- [ ] Run migration to add new columns
-- [ ] Update `BeforeCreate` hook to handle OAuth users (skip password requirement)
+- [x] Run migration to add new columns
+- [x] Update `BeforeCreate` hook to handle OAuth users (skip password requirement)
 
 ---
 
 ### Step 3: OAuth Service Layer
 
 #### 3.1 Create OAuth Service
-- [ ] Create `internal/services/oauth/oauth_service.go`:
+- [x] Create `internal/services/oauth/oauth_service.go`:
   ```go
   type OAuthService struct {
       googleConfig *oauth2.Config
-      githubConfig *oauth2.Config
       userRepo     *user.Repository
       jwtSecret    string
       frontendURL  string
   }
   ```
-  - [ ] `GetGoogleAuthURL(state string) string` - Generate auth URL
-  - [ ] `GetGitHubAuthURL(state string) string` - Generate auth URL
-  - [ ] `HandleGoogleCallback(code string) (*User, string, error)` - Exchange code, create/update user, return JWT
-  - [ ] `HandleGitHubCallback(code string) (*User, string, error)` - Exchange code, create/update user, return JWT
-  - [ ] `FindOrCreateUser(provider, providerID, email, name, avatar) (*User, error)` - Idempotent user creation
+  - [x] `GetGoogleAuthURL(state string) string` - Generate auth URL
+  - [x] `FindOrCreateUser(provider, providerID, email, name, avatar) (*User, error)` - Idempotent user creation
 
 #### 3.2 State Management (CSRF Protection)
-- [ ] Create `internal/services/oauth/state.go`:
-  - [ ] Generate random state token (UUID)
-  - [ ] Store in Redis with 5-minute TTL
-  - [ ] Validate state on callback
-  - [ ] Delete state after validation
+- [x] Create `internal/services/oauth/state.go`:
+  - [x] Generate random state token (UUID)
+  - [x] Store in Redis with 5-minute TTL
+  - [x] Validate state on callback
+  - [x] Delete state after validation
 
 ---
 
 ### Step 4: OAuth Handlers
 
 #### 4.1 Google OAuth Endpoints
-- [ ] Create `internal/handlers/auth/google_handler.go`:
-  - [ ] `GET /api/auth/google` - Redirect to Google consent screen
-    - [ ] Generate state token
-    - [ ] Store in Redis
-    - [ ] Redirect to Google OAuth URL
-  - [ ] `GET /api/auth/google/callback` - Handle OAuth callback
-    - [ ] Validate state token
-    - [ ] Exchange code for access token
-    - [ ] Fetch user info from Google API
-    - [ ] Find or create user in database
-    - [ ] Generate JWT token
-    - [ ] Redirect to frontend with token in URL fragment
-
-#### 4.2 GitHub OAuth Endpoints
-- [ ] Create `internal/handlers/auth/github_handler.go`:
-  - [ ] `GET /api/auth/github` - Redirect to GitHub consent screen
-    - [ ] Generate state token
-    - [ ] Store in Redis
-    - [ ] Redirect to GitHub OAuth URL
-  - [ ] `GET /api/auth/github/callback` - Handle OAuth callback
-    - [ ] Validate state token
-    - [ ] Exchange code for access token
-    - [ ] Fetch user info from GitHub API
-    - [ ] Fetch primary email if not public
-    - [ ] Find or create user in database
-    - [ ] Generate JWT token
-    - [ ] Redirect to frontend with token in URL fragment
+- [x] Create `internal/handlers/auth/google_handler.go`:
+  - [x] `GET /api/auth/google` - Redirect to Google consent screen
+    - [x] Generate state token
+    - [x] Store in Redis
+    - [x] Redirect to Google OAuth URL
+  - [x] `GET /api/auth/google/callback` - Handle OAuth callback
+    - [x] Validate state token
+    - [x] Exchange code for access token
+    - [x] Fetch user info from Google API
+    - [x] Find or create user in database
+    - [x] Generate JWT token
+    - [x] Redirect to frontend with token in URL fragment
 
 #### 4.3 Register Routes
-- [ ] Update `internal/server/server.go`:
+- [x] Update `internal/server/server.go`:
   ```go
   auth := router.Group("/api/auth")
   {
@@ -146,8 +116,6 @@ Add Google and GitHub OAuth 2.0 authentication for improved user onboarding and 
       // New OAuth routes
       auth.GET("/google", authHandler.GoogleAuth)
       auth.GET("/google/callback", authHandler.GoogleCallback)
-      auth.GET("/github", authHandler.GitHubAuth)
-      auth.GET("/github/callback", authHandler.GitHubCallback)
   }
   ```
 
@@ -156,14 +124,13 @@ Add Google and GitHub OAuth 2.0 authentication for improved user onboarding and 
 ### Step 5: Account Linking (Optional Future Enhancement)
 
 #### 5.1 Link Existing Accounts
-- [ ] Allow users with email/password to link Google/GitHub
+- [ ] Allow users with email/password to link Google
 - [ ] Prevent duplicate accounts with same email
 - [ ] Merge logic:
-  - [ ] If email exists, update `google_id` or `github_id`
+  - [ ] If email exists, update `google_id`
   - [ ] If new email, create new user
 - [ ] Add endpoints:
   - [ ] `POST /api/user/link/google` - Link Google account
-  - [ ] `POST /api/user/link/github` - Link GitHub account
   - [ ] `DELETE /api/user/unlink/:provider` - Unlink OAuth provider
 
 ---
@@ -173,47 +140,42 @@ Add Google and GitHub OAuth 2.0 authentication for improved user onboarding and 
 ### Step 1: Update Auth UI Components
 
 #### 1.1 Social Login Buttons
-- [ ] Create `ui/src/components/auth/social-login-buttons.tsx`:
-  - [ ] Google sign-in button with Google branding
-  - [ ] GitHub sign-in button with GitHub branding
-  - [ ] Use shadcn/ui Button component
-  - [ ] Add loading states
-  - [ ] Handle errors
+- [x] Create `ui/src/components/auth/social-login-buttons.tsx`:
+  - [x] Google sign-in button with Google branding
+  - [x] Use shadcn/ui Button component
+  - [x] Add loading states
+  - [x] Handle errors
 
 #### 1.2 Update Login Page
-- [ ] Update `ui/src/routes/_auth/login.tsx`:
-  - [ ] Add social login buttons above email/password form
-  - [ ] Add "OR" divider between social and email login
-  - [ ] Style consistently with existing design
-  - [ ] Add error toast for OAuth failures
+- [x] Update `ui/src/routes/_auth/login.tsx`:
+  - [x] Add social login buttons above email/password form
+  - [x] Add "OR" divider between social and email login
+  - [x] Style consistently with existing design
+  - [x] Add error toast for OAuth failures
 
 #### 1.3 Update Signup Page
-- [ ] Update `ui/src/routes/_auth/signup.tsx`:
-  - [ ] Add social signup buttons above email/password form
-  - [ ] Add "OR" divider
-  - [ ] Update copy: "Sign up with Google" / "Sign up with GitHub"
+- [x] Update `ui/src/routes/_auth/signup.tsx`:
+  - [x] Add social signup buttons above email/password form
+  - [x] Add "OR" divider
+  - [x] Update copy: "Sign up with Google"
 
 ---
 
 ### Step 2: OAuth Flow Implementation
 
 #### 2.1 Handle OAuth Redirects
-- [ ] Create `ui/src/routes/_auth/oauth-callback.tsx`:
-  - [ ] Parse JWT token from URL fragment
-  - [ ] Store token in localStorage/secure storage
-  - [ ] Fetch user profile
-  - [ ] Redirect to dashboard
-  - [ ] Show error if token invalid
+- [x] Create `ui/src/routes/_auth/oauth-callback.tsx`:
+  - [x] Parse JWT token from URL fragment
+  - [x] Store token in localStorage/secure storage
+  - [x] Fetch user profile
+  - [x] Redirect to dashboard
+  - [x] Show error if token invalid
 
 #### 2.2 API Client Updates
-- [ ] Update `ui/src/api/auth.ts`:
+- [x] Update `ui/src/api/auth.ts`:
   ```ts
   export const initiateGoogleAuth = () => {
     window.location.href = `${API_URL}/api/auth/google`;
-  };
-  
-  export const initiateGitHubAuth = () => {
-    window.location.href = `${API_URL}/api/auth/github`;
   };
   ```
 
@@ -226,7 +188,7 @@ Add Google and GitHub OAuth 2.0 authentication for improved user onboarding and 
   - [ ] Show connected OAuth providers
   - [ ] Display avatar from OAuth provider
   - [ ] Show "Connected via Google" badge if applicable
-  - [ ] Add "Link Google Account" / "Link GitHub Account" buttons
+  - [ ] Add "Link Google Account" button
   - [ ] Add "Unlink" option for connected providers
 
 #### 3.2 Avatar Display
@@ -248,15 +210,6 @@ Add Google and GitHub OAuth 2.0 authentication for improved user onboarding and 
   - [ ] `http://localhost:8080/api/auth/google/callback` (dev)
   - [ ] `https://yourdomain.com/api/auth/google/callback` (prod)
 - [ ] Copy Client ID and Client Secret to `.env.local`
-
-#### GitHub OAuth Setup
-- [ ] Go to GitHub Settings > Developer Settings > OAuth Apps
-- [ ] Create new OAuth app
-- [ ] Set Authorization callback URL:
-  - [ ] `http://localhost:8080/api/auth/github/callback` (dev)
-  - [ ] `https://yourdomain.com/api/auth/github/callback` (prod)
-- [ ] Copy Client ID and generate Client Secret
-- [ ] Add to `.env.local`
 
 ---
 
@@ -281,15 +234,12 @@ Add Google and GitHub OAuth 2.0 authentication for improved user onboarding and 
 
 ### Integration Tests
 - [ ] Mock Google OAuth flow
-- [ ] Mock GitHub OAuth flow
 - [ ] Test callback error handling
 - [ ] Test state mismatch scenarios
 
 ### Manual Testing
 - [ ] Sign up with Google
-- [ ] Sign up with GitHub
 - [ ] Login with existing Google account
-- [ ] Login with existing GitHub account
 - [ ] Try to create duplicate account with same email
 - [ ] Test account linking (if implemented)
 

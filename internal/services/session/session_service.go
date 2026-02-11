@@ -28,10 +28,10 @@ func NewSessionService() *SessionService {
 	service := &SessionService{
 		sessions: make(map[string]*models.ChatSession),
 	}
-	
+
 	// Start background cleanup goroutine
 	go service.cleanupExpiredSessions()
-	
+
 	return service
 }
 
@@ -40,11 +40,11 @@ func NewSessionService() *SessionService {
  */
 func (s *SessionService) CreateSession(botID string) *models.ChatSession {
 	session := models.NewChatSession(botID)
-	
+
 	s.mu.Lock()
 	s.sessions[session.ID] = session
 	s.mu.Unlock()
-	
+
 	return session
 }
 
@@ -55,15 +55,15 @@ func (s *SessionService) GetSession(sessionID string) (*models.ChatSession, erro
 	s.mu.RLock()
 	session, exists := s.sessions[sessionID]
 	s.mu.RUnlock()
-	
+
 	if !exists {
 		return nil, ErrSessionNotFound
 	}
-	
+
 	if session.IsExpired() {
 		return nil, ErrSessionExpired
 	}
-	
+
 	return session, nil
 }
 
@@ -73,16 +73,16 @@ func (s *SessionService) GetSession(sessionID string) (*models.ChatSession, erro
 func (s *SessionService) UpdateActivity(sessionID string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	session, exists := s.sessions[sessionID]
 	if !exists {
 		return ErrSessionNotFound
 	}
-	
+
 	if session.IsExpired() {
 		return ErrSessionExpired
 	}
-	
+
 	session.UpdateActivity()
 	return nil
 }
@@ -102,7 +102,7 @@ func (s *SessionService) DeleteSession(sessionID string) {
 func (s *SessionService) cleanupExpiredSessions() {
 	ticker := time.NewTicker(1 * time.Hour)
 	defer ticker.Stop()
-	
+
 	for range ticker.C {
 		s.mu.Lock()
 		for id, session := range s.sessions {

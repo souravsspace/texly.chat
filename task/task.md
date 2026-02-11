@@ -12,7 +12,7 @@ This file tracks the current development phase. For completed work, see `00-comp
 - **Phase 3**: ✅ Completed (Scaling)
 - **Phase 4**: 📋 Planned (Complete Monetization with Polar Integration)
 - **Phase 5**: 📋 Planned (Infrastructure & Performance - Redis)
-- **Phase 6**: 📋 Planned (Authentication Enhancement - OAuth)
+- **Phase 6**: � In Progress (Authentication Enhancement - Google OAuth)
 - **Phase 7**: 📋 Planned (Marketing & Legal UI)
 - **Phase 8**: 📋 Planned (SEO & Discoverability)
 
@@ -35,7 +35,6 @@ This file tracks the current development phase. For completed work, see `00-comp
 ### Phase 6: Authentication Enhancement
 **Goal**: Add Google & GitHub OAuth for improved user onboarding
 - Google OAuth 2.0 integration
-- GitHub OAuth integration
 - Updated frontend auth UI
 - Account linking for existing users
 - Social login buttons

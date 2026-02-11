@@ -17,7 +17,7 @@ func TestPDFExtractor_New(t *testing.T) {
 
 func TestPDFExtractor_ExtractText_InvalidPDF(t *testing.T) {
 	extractor := NewPDFExtractor()
-	
+
 	tests := []struct {
 		name    string
 		content string
@@ -35,12 +35,12 @@ func TestPDFExtractor_ExtractText_InvalidPDF(t *testing.T) {
 			content: "%PDF-",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := strings.NewReader(tt.content)
 			_, err := extractor.ExtractText(r)
-			
+
 			if err == nil {
 				t.Error("ExtractText() should fail on invalid PDF content")
 			}
@@ -113,13 +113,13 @@ startxref
 
 func TestPDFExtractor_ExtractText_ValidPDF(t *testing.T) {
 	extractor := NewPDFExtractor()
-	
+
 	// Create a minimal valid PDF
 	pdfContent := createMinimalPDF()
 	r := strings.NewReader(pdfContent)
-	
+
 	text, err := extractor.ExtractText(r)
-	
+
 	// This might fail depending on the PDF library's strictness
 	// but we're testing that it at least attempts to process it
 	if err != nil {

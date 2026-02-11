@@ -12,41 +12,41 @@ import (
 func ChunkText(content string, maxTokens int) []string {
 	// Approximate: 1 token ≈ 0.75 words, so maxWords ≈ maxTokens * 0.75
 	maxWords := int(float64(maxTokens) * 0.75)
-	
+
 	// Split into paragraphs first
 	paragraphs := strings.Split(content, "\n")
-	
+
 	var chunks []string
 	var currentChunk strings.Builder
 	currentWordCount := 0
-	
+
 	for _, para := range paragraphs {
 		para = strings.TrimSpace(para)
 		if para == "" {
 			continue
 		}
-		
+
 		paraWords := countWords(para)
-		
+
 		// If adding this paragraph would exceed limit, save current chunk and start new one
 		if currentWordCount > 0 && currentWordCount+paraWords > maxWords {
 			chunks = append(chunks, strings.TrimSpace(currentChunk.String()))
 			currentChunk.Reset()
 			currentWordCount = 0
 		}
-		
+
 		// If a single paragraph is too large, split it by sentences
 		if paraWords > maxWords {
 			sentences := splitSentences(para)
 			for _, sentence := range sentences {
 				sentenceWords := countWords(sentence)
-				
+
 				if currentWordCount > 0 && currentWordCount+sentenceWords > maxWords {
 					chunks = append(chunks, strings.TrimSpace(currentChunk.String()))
 					currentChunk.Reset()
 					currentWordCount = 0
 				}
-				
+
 				if currentChunk.Len() > 0 {
 					currentChunk.WriteString(" ")
 				}
@@ -62,12 +62,12 @@ func ChunkText(content string, maxTokens int) []string {
 			currentWordCount += paraWords
 		}
 	}
-	
+
 	// Add any remaining content
 	if currentChunk.Len() > 0 {
 		chunks = append(chunks, strings.TrimSpace(currentChunk.String()))
 	}
-	
+
 	return chunks
 }
 
@@ -89,16 +89,16 @@ func splitSentences(text string) []string {
 	text = strings.ReplaceAll(text, ". ", ".|")
 	text = strings.ReplaceAll(text, "! ", "!|")
 	text = strings.ReplaceAll(text, "? ", "?|")
-	
+
 	sentences := strings.Split(text, "|")
 	var result []string
-	
+
 	for _, sentence := range sentences {
 		sentence = strings.TrimSpace(sentence)
 		if sentence != "" {
 			result = append(result, sentence)
 		}
 	}
-	
+
 	return result
 }

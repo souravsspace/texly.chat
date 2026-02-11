@@ -56,15 +56,15 @@ func (r *SourceRepo) ListByBotID(botID string) ([]*models.Source, error) {
  */
 func (r *SourceRepo) UpdateStatus(id string, status models.SourceStatus, errorMsg string) error {
 	updates := map[string]interface{}{
-		"status": status,
+		"status":        status,
 		"error_message": errorMsg,
 	}
-	
+
 	if status == models.SourceStatusCompleted || status == models.SourceStatusFailed {
 		now := time.Now()
 		updates["processed_at"] = &now
 	}
-	
+
 	return r.db.Model(&models.Source{}).Where("id = ?", id).Updates(updates).Error
 }
 

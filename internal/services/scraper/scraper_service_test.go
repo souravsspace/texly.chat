@@ -126,7 +126,7 @@ func TestScraperService_FetchAndClean_EmptyContent(t *testing.T) {
 	scraper := NewScraperService()
 	content, err := scraper.FetchAndClean(server.URL)
 
-	// Script content is removed, but the page has title  
+	// Script content is removed, but the page has title
 	// so it won't be empty
 	assert.NoError(t, err)
 	assert.NotEmpty(t, content)

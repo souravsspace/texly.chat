@@ -104,7 +104,7 @@ func TestUpdateBot(t *testing.T) {
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var updatedBot models.Bot
 	db.First(&updatedBot, "id = ?", botInstance.ID)
 	assert.Equal(t, "New Name", updatedBot.Name)

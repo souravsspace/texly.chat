@@ -70,25 +70,25 @@ func TestExcelParser_ParseCSV(t *testing.T) {
 
 func TestExcelParser_ParseCSV_MultipleRows(t *testing.T) {
 	parser := NewExcelParser()
-	
+
 	csv := `Product,Price,Quantity
 Apple,1.20,50
 Banana,0.50,100
 Orange,0.80,75`
-	
+
 	r := strings.NewReader(csv)
 	text, err := parser.ParseCSV(r)
-	
+
 	if err != nil {
 		t.Errorf("ParseCSV() failed: %v", err)
 	}
-	
+
 	// Should have 4 lines (3 rows + newlines)
 	lines := strings.Split(strings.TrimSpace(text), "\n")
 	if len(lines) != 4 {
 		t.Errorf("ParseCSV() expected 4 lines, got %d", len(lines))
 	}
-	
+
 	// First line should contain tab-separated headers
 	if !strings.Contains(lines[0], "Product\tPrice\tQuantity") {
 		t.Error("ParseCSV() did not properly format headers")
@@ -99,11 +99,11 @@ Orange,0.80,75`
 // For now, we'll add a basic structure test
 func TestExcelParser_ParseExcel_InvalidInput(t *testing.T) {
 	parser := NewExcelParser()
-	
+
 	// Invalid Excel content (just plain text)
 	r := strings.NewReader("This is not an Excel file")
 	_, err := parser.ParseExcel(r)
-	
+
 	if err == nil {
 		t.Error("ParseExcel() should fail on invalid Excel content")
 	}

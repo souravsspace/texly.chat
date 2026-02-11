@@ -7,12 +7,28 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/alicebob/miniredis/v2"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"github.com/souravsspace/texly.chat/internal/models"
 	repo "github.com/souravsspace/texly.chat/internal/repo/user"
+	"github.com/souravsspace/texly.chat/internal/services/oauth"
 	"github.com/souravsspace/texly.chat/internal/shared"
 	"github.com/stretchr/testify/assert"
 )
+
+func SetupTestRedis() (*redis.Client, *miniredis.Miniredis) {
+	mr, err := miniredis.Run()
+	if err != nil {
+		panic(err)
+	}
+
+	client := redis.NewClient(&redis.Options{
+		Addr: mr.Addr(),
+	})
+
+	return client, mr
+}
 
 func TestAuthHandler_Signup(t *testing.T) {
 	testDB := shared.SetupTestDB()
@@ -35,7 +51,7 @@ func TestAuthHandler_Signup(t *testing.T) {
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusCreated, w.Code)
-		
+
 		var response models.AuthResponse
 		err := json.Unmarshal(w.Body.Bytes(), &response)
 		assert.NoError(t, err)
@@ -44,26 +60,17 @@ func TestAuthHandler_Signup(t *testing.T) {
 	})
 
 	t.Run("Duplicate Email", func(t *testing.T) {
-		/*
-		* Create existing user first
-		 */
 		existing := models.SignupRequest{
 			Email:    "duplicate@example.com",
 			Password: "password123",
 			Name:     "Existing User",
 		}
-		/*
-		* Register it once
-		 */
 		jsonBody, _ := json.Marshal(existing)
 		req, _ := http.NewRequest("POST", "/auth/signup", bytes.NewBuffer(jsonBody))
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 		assert.Equal(t, http.StatusCreated, w.Code)
 
-		/*
-		* Try again
-		 */
 		w2 := httptest.NewRecorder()
 		req2, _ := http.NewRequest("POST", "/auth/signup", bytes.NewBuffer(jsonBody))
 		router.ServeHTTP(w2, req2)
@@ -73,7 +80,6 @@ func TestAuthHandler_Signup(t *testing.T) {
 }
 
 func TestAuthHandler_Login(t *testing.T) {
-	// Setup
 	testDB := shared.SetupTestDB()
 	testCfg := shared.GetTestConfig()
 	userRepo := repo.NewUserRepo(testDB)
@@ -82,9 +88,6 @@ func TestAuthHandler_Login(t *testing.T) {
 	router.POST("/auth/signup", handler.Signup)
 	router.POST("/auth/login", handler.Login)
 
-	/*
-	* Create a user via signup
-	 */
 	userReq := models.SignupRequest{
 		Email:    "loginuser@example.com",
 		Password: "password123",
@@ -123,5 +126,32 @@ func TestAuthHandler_Login(t *testing.T) {
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
+	})
+}
+
+func TestGoogleHandler_GoogleLogin(t *testing.T) {
+	testDB := shared.SetupTestDB()
+	testCfg := shared.GetTestConfig()
+	
+	client, mr := SetupTestRedis()
+	defer mr.Close()
+	
+	stateService := oauth.NewStateService(client)
+	oauthService := oauth.NewOAuthService(testCfg, testDB)
+	
+	handler := NewGoogleHandler(oauthService, stateService, testCfg)
+	
+	router := gin.New()
+	router.GET("/auth/google", handler.GoogleLogin)
+	
+	t.Run("Redirects to Google", func(t *testing.T) {
+		req, _ := http.NewRequest("GET", "/auth/google", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+		
+		assert.Equal(t, http.StatusTemporaryRedirect, w.Code)
+		location := w.Header().Get("Location")
+		assert.Contains(t, location, "accounts.google.com")
+		assert.Contains(t, location, "state=")
 	})
 }

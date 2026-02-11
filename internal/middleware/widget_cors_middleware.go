@@ -15,24 +15,24 @@ import (
 func WidgetCORS(botRepo *botRepo.BotRepo) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
-		
+
 		// Extract bot ID from request
 		// For /api/public/bots/:id/config, get from URL param
 		// For /api/public/chats/:session_id/messages, we'll validate in handler
 		botID := c.Param("id")
-		
+
 		// If no origin header, allow (for same-origin requests)
 		if origin == "" {
 			c.Next()
 			return
 		}
-		
+
 		// Handle preflight OPTIONS requests
 		if c.Request.Method == "OPTIONS" {
 			c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 			c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, Origin")
 			c.Header("Access-Control-Max-Age", "86400")
-			
+
 			// For preflight, we need to validate if we have a bot ID
 			if botID != "" {
 				if isOriginAllowed(botRepo, botID, origin) {
@@ -40,11 +40,11 @@ func WidgetCORS(botRepo *botRepo.BotRepo) gin.HandlerFunc {
 					c.Header("Access-Control-Allow-Credentials", "true")
 				}
 			}
-			
+
 			c.AbortWithStatus(http.StatusNoContent)
 			return
 		}
-		
+
 		// For actual requests with bot ID, validate origin
 		if botID != "" {
 			if !isOriginAllowed(botRepo, botID, origin) {
@@ -54,14 +54,14 @@ func WidgetCORS(botRepo *botRepo.BotRepo) gin.HandlerFunc {
 				c.Abort()
 				return
 			}
-			
+
 			// Set CORS headers for allowed origin
 			c.Header("Access-Control-Allow-Origin", origin)
 			c.Header("Access-Control-Allow-Credentials", "true")
 			c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 			c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, Origin")
 		}
-		
+
 		c.Next()
 	}
 }
@@ -80,12 +80,12 @@ func isOriginAllowed(repo *botRepo.BotRepo, botID, origin string) bool {
 	if err != nil || bot == nil {
 		return false
 	}
-	
+
 	// If no allowed origins configured, allow all (default to open for easier onboarding)
 	if bot.AllowedOrigins == "" || bot.AllowedOrigins == "[]" {
 		return true
 	}
-	
+
 	// Parse allowed origins JSON
 	var allowedOrigins []string
 	if err := json.Unmarshal([]byte(bot.AllowedOrigins), &allowedOrigins); err != nil {
@@ -96,7 +96,7 @@ func isOriginAllowed(repo *botRepo.BotRepo, botID, origin string) bool {
 			return false
 		}
 	}
-	
+
 	// If list is empty after parsing, allow all
 	if len(allowedOrigins) == 0 {
 		return true
@@ -113,7 +113,7 @@ func isOriginAllowed(repo *botRepo.BotRepo, botID, origin string) bool {
 		if allowed == origin {
 			return true
 		}
-		
+
 		// Wildcard subdomain match (e.g., "*.example.com" matches "app.example.com")
 		if strings.HasPrefix(allowed, "*.") {
 			domain := strings.TrimPrefix(allowed, "*")
@@ -122,6 +122,6 @@ func isOriginAllowed(repo *botRepo.BotRepo, botID, origin string) bool {
 			}
 		}
 	}
-	
+
 	return false
 }

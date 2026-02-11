@@ -12,13 +12,13 @@ import (
 * DocumentChunk represents a chunk of text with its vector embedding
  */
 type DocumentChunk struct {
-	ID         string          `json:"id" gorm:"primaryKey"`
-	SourceID   string          `json:"source_id" gorm:"not null;index"`
-	Content    string          `json:"content" gorm:"not null"`
-	ChunkIndex int             `json:"chunk_index"`
+	ID         string           `json:"id" gorm:"primaryKey"`
+	SourceID   string           `json:"source_id" gorm:"not null;index"`
+	Content    string           `json:"content" gorm:"not null"`
+	ChunkIndex int              `json:"chunk_index"`
 	Embedding  *pgvector.Vector `json:"-" gorm:"type:vector(1536)"`
-	CreatedAt  time.Time       `json:"created_at"`
-	
+	CreatedAt  time.Time        `json:"created_at"`
+
 	// Relation to Source (for GORM Preload)
 	Source Source `json:"source,omitempty" gorm:"foreignKey:SourceID"`
 }

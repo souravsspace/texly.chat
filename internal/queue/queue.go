@@ -84,7 +84,7 @@ func (q *InMemoryQueue) Start(ctx context.Context, handler JobHandler) {
  */
 func (q *InMemoryQueue) worker(ctx context.Context, handler JobHandler, workerID int) {
 	defer q.wg.Done()
-	
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -98,7 +98,7 @@ func (q *InMemoryQueue) worker(ctx context.Context, handler JobHandler, workerID
 				fmt.Printf("Worker %d: job channel closed\n", workerID)
 				return
 			}
-			
+
 			// Process the job
 			if err := handler(job); err != nil {
 				fmt.Printf("Worker %d: error processing job %s: %v\n", workerID, job.SourceID, err)

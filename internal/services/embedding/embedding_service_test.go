@@ -27,7 +27,7 @@ func TestNewEmbeddingService(t *testing.T) {
  */
 func TestGenerateEmbedding(t *testing.T) {
 	t.Skip("Skipping test - requires OpenAI API endpoint override mechanism")
-	
+
 	// Mock OpenAI API server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "POST", r.Method)
@@ -74,7 +74,7 @@ func TestGenerateEmbedding(t *testing.T) {
  */
 func TestGenerateEmbeddings(t *testing.T) {
 	t.Skip("Skipping test - requires OpenAI API endpoint override mechanism")
-	
+
 	// Mock OpenAI API server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -148,7 +148,7 @@ func TestGenerateEmbeddings_EmptyInput(t *testing.T) {
  */
 func TestEmbedChunks(t *testing.T) {
 	t.Skip("Skipping test - requires OpenAI API endpoint override mechanism")
-	
+
 	// Mock OpenAI API server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
