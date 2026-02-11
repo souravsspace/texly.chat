@@ -1,82 +1,95 @@
-# Texly Development Master Task List
+# Texly Development Task List
 
-This file tracks the progress of the entire roadmap. Refer to the specific task files in this directory for detailed implementation instructions.
+This file tracks the current development phase. For completed work, see `00-completed-phases.md`.
 
-## Phase 1: Foundation & MVP
+---
 
-- [x] **1.1 Database & Vector Foundation** (`01-phase1-database_setup.md`)
-  - [x] Configure GORM with SQLite (`internal/config/database.go`)
-  - [x] Enable WAL mode for concurrency
-  - [x] Integrate `sqlite-vec` extension for vector search
-  - [x] Define `User` Model (Refine/Verify)
-  - [x] Define `Bot` Model (`internal/models/bot.go`)
-  - [x] Define `DocumentChunk` Model (`internal/models/document_chunk.go`) (Vector storage)
-  - [x] Run AutoMigrate & Vector Table Creation (Virtual Tables)
+## Roadmap Overview
 
-- [x] **1.2 Bot Management** (`02-phase1-bot_management.md`)
-  - [x] Implement Bot Handlers (Create, List, Get, Update, Delete) (`internal/handlers/bot`)
-  - [x] Setup API Routes & Validation
-  - [x] Create Frontend API Client (`ui/src/api/index.ts`)
-  - [x] Build Dashboard UI (`ui/src/routes/dashboard/index.tsx`)
-  - [x] Create CreateBotDialog Component (`ui/src/routes/dashboard/_components/create-bot-dialog.tsx`)
+### Status Overview
+- **Phase 1**: ✅ Completed (Foundation & MVP)
+- **Phase 2**: ✅ Completed (Growth Features)
+- **Phase 3**: ✅ Completed (Scaling)
+- **Phase 4**: 📋 Planned (Complete Monetization with Polar Integration)
+- **Phase 5**: 📋 Planned (Infrastructure & Performance - Redis)
+- **Phase 6**: 📋 Planned (Authentication Enhancement - OAuth)
+- **Phase 7**: 📋 Planned (Marketing & Legal UI)
+- **Phase 8**: 📋 Planned (SEO & Discoverability)
 
-- [x] **1.3 Scraping & Queue System** (`03-phase1-scraping.md`)
-  - [x] Design Job Queue Interface (In-memory/SQLite-backed) (`internal/queue`)
-  - [x] Implement `Scraper` Service (`internal/services/scraper/scraper.go`)
-  - [x] Create `ProcessSource` Worker Task (`internal/worker/tasks`)
-  - [x] Implement Source Handler (Add URL) (`internal/handlers/source`)
-  - [x] Build Source Management UI (Add Dialog, List)
+---
 
-- [x] **1.4 Embeddings & Vector Search** (`04-phase1-embeddings.md`)
-  - [x] Implement Embedding Service using OpenAI (`internal/services/embedding`)
-  - [x] Create Vector Repository (`internal/repo/vector/vector_repo.go`)
-  - [x] Implement Vector Search Service (`internal/services/vector`)
-  - [x] Integrate with scraper worker for automatic embedding generation
+## Phase Breakdown Summary
 
-- [x] **1.5 Chat Interface** (`05-phase1-chat.md`)
-  - [x] Implement Chat Handler with RAG Logic (`internal/handlers/chat`)
-  - [x] Implement Streaming Response (SSE)
-  - [x] Build Chat UI Component (`ui/src/routes/bots/$botId/chat.tsx`)
+### Phase 5: Infrastructure & Performance (Redis Layer)
+**Goal**: Add Redis caching to handle 1k+ concurrent writes and improve performance
+- Redis integration for caching
+- Rate limiting and request throttling
+- Database write buffering
+- Connection pooling
+- Performance monitoring
 
-## Phase 2: Growth Features
+**Details**: See `13-phase5-redis-infrastructure.md`
 
-- [x] **2.1 Widget Backend & API** (`06_phase2_widget_backend.md`)
-  - [x] Update Bot Model (AllowedOrigins, Config)
-  - [x] Implement Public Config Endpoint
-  - [x] Implement Public Chat & Streaming Routes
-  - [x] Add CORS/Security Middleware
+---
 
-- [x] **2.2 Widget Client (React)** (`07_phase2_widget_client.md`)
-  - [x] Setup Widget Project (Vite/ShadowDOM)
-  - [x] Implement Chat UI (Launcher, Window)
-  - [x] Implement State & API Client
-  - [x] Build Embed Script loader
+### Phase 6: Authentication Enhancement
+**Goal**: Add Google & GitHub OAuth for improved user onboarding
+- Google OAuth 2.0 integration
+- GitHub OAuth integration
+- Updated frontend auth UI
+- Account linking for existing users
+- Social login buttons
 
-- [x] **2.3 Widget Dashboard** (`08_phase2_widget_dashboard.md`)
-  - [x] Build Configuration Form (Theme, Origins)
-  - [x] Implement Live Preview
-  - [x] Add Embed Code Generator/Display
+**Details**: See `14-phase6-oauth.md`
 
-- [x] **2.2 File Uploads** (`09-phase2-files.md`)
-  - [x] Implement File Parser (PDF/DOCX) (`internal/services/extractor`)
-  - [x] Create File Upload Handler (`internal/handlers/source`)
-  - [x] Build File Upload UI Component
+---
 
-- [x] **2.3 Sitemap Crawler** (`12-phase2-sitemap.md`)
-  - [x] Enhance Scraper to parse `sitemap.xml`
-  - [x] Implement Recursive Crawling Job
+### Phase 7: Marketing & Legal UI
+**Goal**: Build customer-facing pages and legal compliance
+- Landing page with hero, features, pricing
+- Dashboard UI/UX improvements
+- Legal pages (Terms, Privacy, Cookies)
+- Contact/Support pages
+- Onboarding flow
 
-## Phase 3: Scaling
+**Details**: See `15-phase7-marketing-legal.md`
 
-- [x] **3.1 Analytics & Security** (`10-phase3-analytics.md`)
-  - [x] Implement Analytics Service (SQL Aggregations)
-  - [x] Implement Rate Limiting Middleware (Redis -- update the docker and edit the env if needed)
-  - [x] Build Analytics Dashboard Charts
+---
 
-## Phase 4: Business Logic
+### Phase 8: SEO & Discoverability
+**Goal**: Optimize for search engines and AI crawlers
+- SEO meta tags and structured data
+- sitemap.xml and robots.txt
+- LLM routes (llms.txt, ai.txt)
+- Open Graph and Twitter Cards
+- Core Web Vitals optimization
 
-- [ ] **4.1 Monetization** (`11-phase4-monetization.md`)
-  - [ ] Integrate Polar.sh Go SDK
-  - [ ] Implement Webhook Handler (`internal/handlers/billing`)
-  - [ ] Implement Usage/Entitlement Middleware
-  - [ ] Build Subscription/Upgrade UI
+**Details**: See `16-phase8-seo.md`
+
+---
+
+## Quick Reference
+
+### Completed Phases
+See `00-completed-phases.md` for full details on:
+- Phase 1: Foundation & MVP
+- Phase 2: Growth Features  
+- Phase 3: Scaling
+
+### Documentation
+- **Architecture**: `00-overview-architecture.md`
+- **Tech Stack**: `00-overview-tech_stack.md`
+- **Completion Summary**: `00-completed-phases.md`
+- **Development Guide**: `../CLAUDE.md`
+
+### Commands
+```bash
+make dev              # Start development servers
+make test             # Run all tests
+make docker-up        # Start with Docker Compose
+make ui-types         # Generate TypeScript types
+```
+
+---
+
+**Last Updated**: February 11, 2025
