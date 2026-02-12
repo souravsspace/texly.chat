@@ -36,3 +36,6 @@ Thumbs.db
 
 # Data
 data/
+
+# node_modules
+node_modules
