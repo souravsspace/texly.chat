@@ -11,10 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settings'
 import { Route as AuthSignupRouteImport } from './routes/_auth/signup'
-import { Route as AuthOauthCallbackRouteImport } from './routes/_auth/oauth-callback'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as DashboardBotsBotIdRouteImport } from './routes/dashboard/bots/$botId'
+import { Route as AuthAuthCallbackRouteImport } from './routes/_auth/auth.callback'
 import { Route as DashboardBotsBotIdWidgetRouteImport } from './routes/dashboard/bots/$botId/widget'
 import { Route as DashboardBotsBotIdConfigureRouteImport } from './routes/dashboard/bots/$botId/configure'
 import { Route as DashboardBotsBotIdChatRouteImport } from './routes/dashboard/bots/$botId/chat'
@@ -30,14 +31,14 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   path: '/dashboard/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
+  id: '/dashboard/settings',
+  path: '/dashboard/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthSignupRoute = AuthSignupRouteImport.update({
   id: '/_auth/signup',
   path: '/signup',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthOauthCallbackRoute = AuthOauthCallbackRouteImport.update({
-  id: '/_auth/oauth-callback',
-  path: '/oauth-callback',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthLoginRoute = AuthLoginRouteImport.update({
@@ -48,6 +49,11 @@ const AuthLoginRoute = AuthLoginRouteImport.update({
 const DashboardBotsBotIdRoute = DashboardBotsBotIdRouteImport.update({
   id: '/dashboard/bots/$botId',
   path: '/dashboard/bots/$botId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthAuthCallbackRoute = AuthAuthCallbackRouteImport.update({
+  id: '/_auth/auth/callback',
+  path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardBotsBotIdWidgetRoute =
@@ -77,9 +83,10 @@ const DashboardBotsBotIdAnalyticsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof AuthLoginRoute
-  '/oauth-callback': typeof AuthOauthCallbackRoute
   '/signup': typeof AuthSignupRoute
+  '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/auth/callback': typeof AuthAuthCallbackRoute
   '/dashboard/bots/$botId': typeof DashboardBotsBotIdRouteWithChildren
   '/dashboard/bots/$botId/analytics': typeof DashboardBotsBotIdAnalyticsRoute
   '/dashboard/bots/$botId/chat': typeof DashboardBotsBotIdChatRoute
@@ -89,9 +96,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof AuthLoginRoute
-  '/oauth-callback': typeof AuthOauthCallbackRoute
   '/signup': typeof AuthSignupRoute
+  '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/auth/callback': typeof AuthAuthCallbackRoute
   '/dashboard/bots/$botId': typeof DashboardBotsBotIdRouteWithChildren
   '/dashboard/bots/$botId/analytics': typeof DashboardBotsBotIdAnalyticsRoute
   '/dashboard/bots/$botId/chat': typeof DashboardBotsBotIdChatRoute
@@ -102,9 +110,10 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_auth/login': typeof AuthLoginRoute
-  '/_auth/oauth-callback': typeof AuthOauthCallbackRoute
   '/_auth/signup': typeof AuthSignupRoute
+  '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/_auth/auth/callback': typeof AuthAuthCallbackRoute
   '/dashboard/bots/$botId': typeof DashboardBotsBotIdRouteWithChildren
   '/dashboard/bots/$botId/analytics': typeof DashboardBotsBotIdAnalyticsRoute
   '/dashboard/bots/$botId/chat': typeof DashboardBotsBotIdChatRoute
@@ -116,9 +125,10 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
-    | '/oauth-callback'
     | '/signup'
+    | '/dashboard/settings'
     | '/dashboard/'
+    | '/auth/callback'
     | '/dashboard/bots/$botId'
     | '/dashboard/bots/$botId/analytics'
     | '/dashboard/bots/$botId/chat'
@@ -128,9 +138,10 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
-    | '/oauth-callback'
     | '/signup'
+    | '/dashboard/settings'
     | '/dashboard'
+    | '/auth/callback'
     | '/dashboard/bots/$botId'
     | '/dashboard/bots/$botId/analytics'
     | '/dashboard/bots/$botId/chat'
@@ -140,9 +151,10 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_auth/login'
-    | '/_auth/oauth-callback'
     | '/_auth/signup'
+    | '/dashboard/settings'
     | '/dashboard/'
+    | '/_auth/auth/callback'
     | '/dashboard/bots/$botId'
     | '/dashboard/bots/$botId/analytics'
     | '/dashboard/bots/$botId/chat'
@@ -153,9 +165,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthLoginRoute: typeof AuthLoginRoute
-  AuthOauthCallbackRoute: typeof AuthOauthCallbackRoute
   AuthSignupRoute: typeof AuthSignupRoute
+  DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
+  AuthAuthCallbackRoute: typeof AuthAuthCallbackRoute
   DashboardBotsBotIdRoute: typeof DashboardBotsBotIdRouteWithChildren
 }
 
@@ -175,18 +188,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/settings': {
+      id: '/dashboard/settings'
+      path: '/dashboard/settings'
+      fullPath: '/dashboard/settings'
+      preLoaderRoute: typeof DashboardSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_auth/signup': {
       id: '/_auth/signup'
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof AuthSignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_auth/oauth-callback': {
-      id: '/_auth/oauth-callback'
-      path: '/oauth-callback'
-      fullPath: '/oauth-callback'
-      preLoaderRoute: typeof AuthOauthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth/login': {
@@ -201,6 +214,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard/bots/$botId'
       fullPath: '/dashboard/bots/$botId'
       preLoaderRoute: typeof DashboardBotsBotIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_auth/auth/callback': {
+      id: '/_auth/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthAuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/bots/$botId/widget': {
@@ -254,9 +274,10 @@ const DashboardBotsBotIdRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthLoginRoute: AuthLoginRoute,
-  AuthOauthCallbackRoute: AuthOauthCallbackRoute,
   AuthSignupRoute: AuthSignupRoute,
+  DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
+  AuthAuthCallbackRoute: AuthAuthCallbackRoute,
   DashboardBotsBotIdRoute: DashboardBotsBotIdRouteWithChildren,
 }
 export const routeTree = rootRouteImport

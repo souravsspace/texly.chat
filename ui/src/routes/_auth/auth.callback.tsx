@@ -2,13 +2,13 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 import { z } from "zod";
 import { Icons } from "@/components/icons";
-import { useAuthStore } from "@/stores/auth";
+import { useAuth } from "@/providers/auth";
 
 const oauthCallbackSearchSchema = z.object({
   error: z.string().optional(),
 });
 
-export const Route = createFileRoute("/_auth/oauth-callback")({
+export const Route = createFileRoute("/_auth/auth/callback")({
   validateSearch: oauthCallbackSearchSchema,
   component: OAuthCallback,
 });
@@ -16,6 +16,7 @@ export const Route = createFileRoute("/_auth/oauth-callback")({
 function OAuthCallback() {
   const navigate = useNavigate();
   const { error } = Route.useSearch();
+  const { login } = useAuth();
   const processedRef = useRef(false);
 
   useEffect(() => {
@@ -44,10 +45,10 @@ function OAuthCallback() {
 
           if (response.ok) {
             const user = await response.json();
-            useAuthStore.getState().login(token, user);
+            login(token, user);
             navigate({ to: "/dashboard" });
           } else {
-            console.error("Failed to fetch user info");
+            console.error("Failed to fetch user info", await response.text());
             navigate({ to: "/login" });
           }
         } catch (e) {
@@ -55,12 +56,13 @@ function OAuthCallback() {
           navigate({ to: "/login" });
         }
       } else {
+        console.error("No token found in URL fragment");
         navigate({ to: "/login" });
       }
     };
 
     handleCallback();
-  }, [navigate, error]);
+  }, [navigate, error, login]);
 
   return (
     <div className="flex min-h-screen items-center justify-center">

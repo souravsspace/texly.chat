@@ -56,13 +56,13 @@ func TestStateService(t *testing.T) {
 
 	t.Run("ValidateState", func(t *testing.T) {
 		state, _ := service.GenerateState()
-		
+
 		// Valid state
 		assert.True(t, service.ValidateState(state))
-		
+
 		// Replay should fail
 		assert.False(t, service.ValidateState(state))
-		
+
 		// Invalid state
 		assert.False(t, service.ValidateState("invalid-state"))
 	})
@@ -75,10 +75,10 @@ func TestOAuthService_GetGoogleAuthURL(t *testing.T) {
 		GoogleClientSecret: "test-client-secret",
 		GoogleRedirectURL:  "http://localhost:8080/callback",
 	}
-	
+
 	service := oauth.NewOAuthService(cfg, db)
 	state := "test-state"
-	
+
 	url := service.GetGoogleAuthURL(state)
 	assert.Contains(t, url, "https://accounts.google.com/o/oauth2/auth")
 	assert.Contains(t, url, "client_id=test-client-id")

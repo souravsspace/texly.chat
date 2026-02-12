@@ -61,8 +61,8 @@ func (h *GoogleHandler) GoogleCallback(c *gin.Context) {
 
 	// Generate JWT
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": user.ID,
-		"exp": time.Now().Add(time.Hour * 72).Unix(),
+		"user_id": user.ID,
+		"exp":     time.Now().Add(time.Hour * 72).Unix(),
 	})
 
 	tokenString, err := token.SignedString([]byte(h.cfg.JWTSecret))
@@ -72,6 +72,6 @@ func (h *GoogleHandler) GoogleCallback(c *gin.Context) {
 	}
 
 	// Redirect to frontend with token
-    // Using fragment to avoid sending token to server in subsequent requests in URL
+	// Using fragment to avoid sending token to server in subsequent requests in URL
 	c.Redirect(http.StatusTemporaryRedirect, fmt.Sprintf("%s/auth/callback#token=%s", h.cfg.FrontendURL, tokenString))
 }

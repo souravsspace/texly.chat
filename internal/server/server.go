@@ -198,7 +198,7 @@ func (s *Server) Run() error {
 		* Auth routes
 		 */
 		apiGroup.POST("/auth/signup", authHandler.Signup)
-		apiGroup.POST("/auth/signup", authHandler.Signup)
+
 		apiGroup.POST("/auth/login", authHandler.Login)
 		apiGroup.GET("/auth/google", googleHandler.GoogleLogin)
 		apiGroup.GET("/auth/google/callback", googleHandler.GoogleCallback)

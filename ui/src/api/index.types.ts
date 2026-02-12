@@ -213,6 +213,9 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  avatar: string;
+  google_id: string | null;
+  auth_provider: string;
   created_at: string | Date;
   updated_at: string | Date;
 }

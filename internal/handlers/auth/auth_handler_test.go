@@ -132,23 +132,23 @@ func TestAuthHandler_Login(t *testing.T) {
 func TestGoogleHandler_GoogleLogin(t *testing.T) {
 	testDB := shared.SetupTestDB()
 	testCfg := shared.GetTestConfig()
-	
+
 	client, mr := SetupTestRedis()
 	defer mr.Close()
-	
+
 	stateService := oauth.NewStateService(client)
 	oauthService := oauth.NewOAuthService(testCfg, testDB)
-	
+
 	handler := NewGoogleHandler(oauthService, stateService, testCfg)
-	
+
 	router := gin.New()
 	router.GET("/auth/google", handler.GoogleLogin)
-	
+
 	t.Run("Redirects to Google", func(t *testing.T) {
 		req, _ := http.NewRequest("GET", "/auth/google", nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
-		
+
 		assert.Equal(t, http.StatusTemporaryRedirect, w.Code)
 		location := w.Header().Get("Location")
 		assert.Contains(t, location, "accounts.google.com")

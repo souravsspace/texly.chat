@@ -33,6 +33,12 @@ const config = defineConfig({
       "/api": {
         target: "http://localhost:8080",
         changeOrigin: true,
+        bypass: (req) => {
+          // Bypass proxy for OAuth routes - let browser handle redirects
+          if (req.url?.startsWith("/api/auth/google")) {
+            return req.url.replace("/api", "http://localhost:8080/api");
+          }
+        },
       },
     },
   },

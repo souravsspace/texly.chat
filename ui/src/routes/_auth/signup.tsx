@@ -24,6 +24,7 @@ const signupSchema = z.object({
 function Signup() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const apiBaseUrl = import.meta.env.DEV ? "http://localhost:8080" : "";
 
   const [globalError, setGlobalError] = useState("");
 
@@ -114,7 +115,7 @@ function Signup() {
               buttonVariants({ variant: "outline", size: "lg" }),
               "mt-8 w-full gap-3"
             )}
-            href="/api/auth/google"
+            href={`${apiBaseUrl}/api/auth/google`}
           >
             <Icons.google />
             Continue with Google
