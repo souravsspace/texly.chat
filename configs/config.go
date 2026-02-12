@@ -31,7 +31,9 @@ type Config struct {
 	MinIOUseSSL     bool
 	MaxUploadSizeMB int
 	// Redis Configuration
-	RedisURL string
+	RedisURL          string
+	RedisMaxConns     int
+	RedisMinIdleConns int
 
 	// Google OAuth Configuration
 	GoogleClientID     string
@@ -68,6 +70,8 @@ func Load() Config {
 		MinIOUseSSL:          getEnvAsBool("MINIO_USE_SSL", false),
 		MaxUploadSizeMB:      getEnvAsInt("MAX_UPLOAD_SIZE_MB", 100),
 		RedisURL:             getEnv("REDIS_URL", true),
+		RedisMaxConns:        getEnvAsInt("REDIS_MAX_CONNS", 50),
+		RedisMinIdleConns:    getEnvAsInt("REDIS_MIN_IDLE_CONNS", 10),
 		GoogleClientID:       getEnv("GOOGLE_CLIENT_ID", false),
 		GoogleClientSecret:   getEnv("GOOGLE_CLIENT_SECRET", false),
 		GoogleRedirectURL:    getEnv("GOOGLE_REDIRECT_URL", false),

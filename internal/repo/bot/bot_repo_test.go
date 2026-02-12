@@ -11,7 +11,7 @@ import (
 
 func TestBotRepo_Create(t *testing.T) {
 	testDB := shared.SetupTestDB()
-	repo := NewBotRepo(testDB)
+	repo := NewBotRepo(testDB, nil)
 
 	bot := &models.Bot{
 		ID:           uuid.New().String(),
@@ -35,7 +35,7 @@ func TestBotRepo_Create(t *testing.T) {
 
 func TestBotRepo_GetByUserID(t *testing.T) {
 	testDB := shared.SetupTestDB()
-	repo := NewBotRepo(testDB)
+	repo := NewBotRepo(testDB, nil)
 
 	userID := "user-1"
 	bot1 := &models.Bot{
@@ -81,7 +81,7 @@ func TestBotRepo_GetByUserID(t *testing.T) {
 
 func TestBotRepo_GetByID(t *testing.T) {
 	testDB := shared.SetupTestDB()
-	repo := NewBotRepo(testDB)
+	repo := NewBotRepo(testDB, nil)
 
 	userID := "user-1"
 	bot := &models.Bot{
@@ -111,7 +111,7 @@ func TestBotRepo_GetByID(t *testing.T) {
 
 func TestBotRepo_Update(t *testing.T) {
 	testDB := shared.SetupTestDB()
-	repo := NewBotRepo(testDB)
+	repo := NewBotRepo(testDB, nil)
 
 	bot := &models.Bot{
 		ID:           uuid.New().String(),
@@ -134,7 +134,7 @@ func TestBotRepo_Update(t *testing.T) {
 
 func TestBotRepo_Delete(t *testing.T) {
 	testDB := shared.SetupTestDB()
-	repo := NewBotRepo(testDB)
+	repo := NewBotRepo(testDB, nil)
 
 	userID := "user-1"
 	bot := &models.Bot{
@@ -160,7 +160,7 @@ func TestBotRepo_Delete(t *testing.T) {
 
 func TestBotRepo_GetByIDPublic(t *testing.T) {
 	testDB := shared.SetupTestDB()
-	repo := NewBotRepo(testDB)
+	repo := NewBotRepo(testDB, nil)
 
 	userID := "user-1"
 	bot := &models.Bot{

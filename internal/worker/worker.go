@@ -43,10 +43,11 @@ func NewWorker(
 	embeddingSvc *embedding.EmbeddingService,
 	vectorRepo *vectorRepo.VectorRepository,
 	storageSvc *storage.MinIOStorageService,
+	sourceRepoInstance *sourceRepo.SourceRepo,
 ) *Worker {
 	return &Worker{
 		db:             db,
-		sourceRepo:     sourceRepo.NewSourceRepo(db),
+		sourceRepo:     sourceRepoInstance,
 		vectorRepo:     vectorRepo,
 		scraperSvc:     scraper.NewScraperService(),
 		embeddingSvc:   embeddingSvc,

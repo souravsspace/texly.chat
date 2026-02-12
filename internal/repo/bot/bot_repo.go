@@ -1,9 +1,12 @@
 package bot
 
 import (
+	"context"
 	"errors"
+	"fmt"
 
 	"github.com/souravsspace/texly.chat/internal/models"
+	"github.com/souravsspace/texly.chat/internal/services/cache"
 	"gorm.io/gorm"
 )
 
@@ -11,37 +14,71 @@ import (
 * BotRepo handles database operations for bots
  */
 type BotRepo struct {
-	db *gorm.DB
+	db    *gorm.DB
+	cache *cache.CacheService
 }
 
 /*
 * NewBotRepo creates a new BotRepo instance
  */
-func NewBotRepo(db *gorm.DB) *BotRepo {
-	return &BotRepo{db: db}
+func NewBotRepo(db *gorm.DB, cache *cache.CacheService) *BotRepo {
+	return &BotRepo{db: db, cache: cache}
 }
 
 /*
 * Create inserts a new bot into the database
  */
 func (r *BotRepo) Create(bot *models.Bot) error {
-	return r.db.Create(bot).Error
+	if err := r.db.Create(bot).Error; err != nil {
+		return err
+	}
+	// Invalidate bot list cache for this user
+	_ = r.cache.DeletePattern(context.Background(), fmt.Sprintf(cache.BotListCacheKey, bot.UserID))
+	return nil
 }
 
 /*
 * GetByUserID retrieves all bots for a specific user
  */
 func (r *BotRepo) GetByUserID(userID string) ([]models.Bot, error) {
+	ctx := context.Background()
+	cacheKey := fmt.Sprintf(cache.BotListCacheKey, userID)
+
+	// Try cache first
 	var bots []models.Bot
+	if err := r.cache.GetJSON(ctx, cacheKey, &bots); err == nil {
+		return bots, nil
+	}
+
+	// Cache miss - query database
 	err := r.db.Where("user_id = ?", userID).Find(&bots).Error
-	return bots, err
+	if err != nil {
+		return bots, err
+	}
+
+	// Populate cache
+	_ = r.cache.SetJSON(ctx, cacheKey, bots, cache.BotListCacheTTL)
+	return bots, nil
 }
 
 /*
 * GetByID retrieves a bot by its ID and UserID
  */
 func (r *BotRepo) GetByID(id string, userID string) (*models.Bot, error) {
+	ctx := context.Background()
+	cacheKey := fmt.Sprintf(cache.BotCacheKey, id)
+
+	// Try cache first
 	var bot models.Bot
+	if err := r.cache.GetJSON(ctx, cacheKey, &bot); err == nil {
+		// Verify user ownership from cached data
+		if bot.UserID == userID {
+			return &bot, nil
+		}
+		// Cache hit but different user, fall through to DB
+	}
+
+	// Cache miss - query database
 	err := r.db.Where("id = ? AND user_id = ?", id, userID).First(&bot).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -49,6 +86,9 @@ func (r *BotRepo) GetByID(id string, userID string) (*models.Bot, error) {
 		}
 		return nil, err
 	}
+
+	// Populate cache
+	_ = r.cache.SetJSON(ctx, cacheKey, bot, cache.BotCacheTTL)
 	return &bot, nil
 }
 
@@ -56,7 +96,14 @@ func (r *BotRepo) GetByID(id string, userID string) (*models.Bot, error) {
 * Update updates an existing bot
  */
 func (r *BotRepo) Update(bot *models.Bot) error {
-	return r.db.Save(bot).Error
+	if err := r.db.Save(bot).Error; err != nil {
+		return err
+	}
+	// Invalidate caches
+	ctx := context.Background()
+	_ = r.cache.Delete(ctx, fmt.Sprintf(cache.BotCacheKey, bot.ID))
+	_ = r.cache.DeletePattern(ctx, fmt.Sprintf(cache.BotListCacheKey, bot.UserID))
+	return nil
 }
 
 /*
@@ -70,6 +117,10 @@ func (r *BotRepo) Delete(id string, userID string) error {
 	if result.RowsAffected == 0 {
 		return gorm.ErrRecordNotFound
 	}
+	// Invalidate caches
+	ctx := context.Background()
+	_ = r.cache.Delete(ctx, fmt.Sprintf(cache.BotCacheKey, id))
+	_ = r.cache.DeletePattern(ctx, fmt.Sprintf(cache.BotListCacheKey, userID))
 	return nil
 }
 
@@ -78,7 +129,16 @@ func (r *BotRepo) Delete(id string, userID string) error {
 * Used for public widget access and CORS validation
  */
 func (r *BotRepo) GetByIDPublic(id string) (*models.Bot, error) {
+	ctx := context.Background()
+	cacheKey := fmt.Sprintf(cache.BotCacheKey, id)
+
+	// Try cache first
 	var bot models.Bot
+	if err := r.cache.GetJSON(ctx, cacheKey, &bot); err == nil {
+		return &bot, nil
+	}
+
+	// Cache miss - query database
 	err := r.db.Where("id = ?", id).First(&bot).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -86,5 +146,8 @@ func (r *BotRepo) GetByIDPublic(id string) (*models.Bot, error) {
 		}
 		return nil, err
 	}
+
+	// Populate cache
+	_ = r.cache.SetJSON(ctx, cacheKey, bot, cache.BotCacheTTL)
 	return &bot, nil
 }

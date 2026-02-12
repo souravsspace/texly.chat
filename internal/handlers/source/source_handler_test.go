@@ -30,8 +30,8 @@ func setupTestDB() *gorm.DB {
 
 func setupRouter(db *gorm.DB, jobQueue queue.JobQueue) *gin.Engine {
 	r := gin.Default()
-	sRepo := sourceRepo.NewSourceRepo(db)
-	bRepo := botRepo.NewBotRepo(db)
+	sRepo := sourceRepo.NewSourceRepo(db, nil)
+	bRepo := botRepo.NewBotRepo(db, nil)
 
 	// Create a mock MinIO storage service (will fail to connect but that's OK for these tests)
 	// For URL source tests, we don't actually use storage

@@ -33,7 +33,7 @@ func SetupTestRedis() (*redis.Client, *miniredis.Miniredis) {
 func TestAuthHandler_Signup(t *testing.T) {
 	testDB := shared.SetupTestDB()
 	testCfg := shared.GetTestConfig()
-	userRepo := repo.NewUserRepo(testDB)
+	userRepo := repo.NewUserRepo(testDB, nil)
 	handler := NewAuthHandler(userRepo, testCfg)
 	router := gin.New()
 	router.POST("/auth/signup", handler.Signup)
@@ -82,7 +82,7 @@ func TestAuthHandler_Signup(t *testing.T) {
 func TestAuthHandler_Login(t *testing.T) {
 	testDB := shared.SetupTestDB()
 	testCfg := shared.GetTestConfig()
-	userRepo := repo.NewUserRepo(testDB)
+	userRepo := repo.NewUserRepo(testDB, nil)
 	handler := NewAuthHandler(userRepo, testCfg)
 	router := gin.New()
 	router.POST("/auth/signup", handler.Signup)

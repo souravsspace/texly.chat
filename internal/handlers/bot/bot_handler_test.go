@@ -28,7 +28,7 @@ func setupTestDB() *gorm.DB {
 
 func setupRouter(db *gorm.DB) *gin.Engine {
 	r := gin.Default()
-	repo := botRepo.NewBotRepo(db)
+	repo := botRepo.NewBotRepo(db, nil)
 	handler := bot.NewBotHandler(repo)
 
 	// Mock Auth middleware by setting user_id in context

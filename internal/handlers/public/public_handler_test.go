@@ -21,7 +21,7 @@ func setupTestHandler() (*PublicHandler, *gin.Engine, *botRepo.BotRepo, *gorm.DB
 	gin.SetMode(gin.TestMode)
 	testDB := shared.SetupTestDB()
 
-	repo := botRepo.NewBotRepo(testDB)
+	repo := botRepo.NewBotRepo(testDB, nil)
 	sessionService := session.NewSessionService()
 
 	handler := NewPublicHandler(repo, sessionService, nil) // chatService is nil for these tests

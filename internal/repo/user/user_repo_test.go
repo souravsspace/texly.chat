@@ -12,7 +12,7 @@ import (
 
 func TestUserRepo_Create(t *testing.T) {
 	testDB := shared.SetupTestDB()
-	repo := NewUserRepo(testDB)
+	repo := NewUserRepo(testDB, nil)
 	user := &models.User{
 		ID:           uuid.New().String(),
 		Email:        "test@example.com",
@@ -44,7 +44,7 @@ func TestUserRepo_Create(t *testing.T) {
 func TestUserRepo_GetByEmail(t *testing.T) {
 	// Setup
 	testDB := shared.SetupTestDB()
-	repo := NewUserRepo(testDB)
+	repo := NewUserRepo(testDB, nil)
 	user := &models.User{
 		ID:           uuid.New().String(),
 		Email:        "getbyemail@example.com",
@@ -75,7 +75,7 @@ func TestUserRepo_GetByEmail(t *testing.T) {
 func TestUserRepo_GetByID(t *testing.T) {
 	// Setup
 	testDB := shared.SetupTestDB()
-	repo := NewUserRepo(testDB)
+	repo := NewUserRepo(testDB, nil)
 	user := &models.User{
 		ID:           uuid.New().String(),
 		Email:        "getbyid@example.com",

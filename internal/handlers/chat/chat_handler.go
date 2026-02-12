@@ -8,14 +8,12 @@ import (
 	"github.com/souravsspace/texly.chat/internal/models"
 	botRepo "github.com/souravsspace/texly.chat/internal/repo/bot"
 	"github.com/souravsspace/texly.chat/internal/services/chat"
-	"gorm.io/gorm"
 )
 
 /*
  * ChatHandler handles HTTP requests for chat endpoints
  */
 type ChatHandler struct {
-	db          *gorm.DB
 	botRepo     *botRepo.BotRepo
 	chatService *chat.ChatService
 }
@@ -23,10 +21,9 @@ type ChatHandler struct {
 /*
  * NewChatHandler creates a new chat handler instance
  */
-func NewChatHandler(db *gorm.DB, chatService *chat.ChatService) *ChatHandler {
+func NewChatHandler(botRepo *botRepo.BotRepo, chatService *chat.ChatService) *ChatHandler {
 	return &ChatHandler{
-		db:          db,
-		botRepo:     botRepo.NewBotRepo(db),
+		botRepo:     botRepo,
 		chatService: chatService,
 	}
 }

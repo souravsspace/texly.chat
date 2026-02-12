@@ -5,6 +5,7 @@ import (
 
 	"github.com/souravsspace/texly.chat/internal/models"
 	"github.com/souravsspace/texly.chat/internal/queue"
+	sourceRepo "github.com/souravsspace/texly.chat/internal/repo/source"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -19,6 +20,10 @@ func setupTestDB() *gorm.DB {
 	return db
 }
 
+func newTestWorker(db *gorm.DB) *Worker {
+	return NewWorker(db, nil, nil, nil, sourceRepo.NewSourceRepo(db, nil))
+}
+
 func TestWorker_ProcessScrapeJob_Success(t *testing.T) {
 	// Skip this test in CI as it requires network access
 	if testing.Short() {
@@ -26,7 +31,7 @@ func TestWorker_ProcessScrapeJob_Success(t *testing.T) {
 	}
 
 	db := setupTestDB()
-	worker := NewWorker(db, nil, nil, nil) // No embedding service or storage in tests
+	worker := newTestWorker(db)
 
 	// Create a source
 	source := &models.Source{
@@ -66,7 +71,7 @@ func TestWorker_ProcessScrapeJob_Success(t *testing.T) {
 
 func TestWorker_ProcessScrapeJob_InvalidURL(t *testing.T) {
 	db := setupTestDB()
-	worker := NewWorker(db, nil, nil, nil) // No embedding service or storage in tests
+	worker := newTestWorker(db)
 
 	// Create a source with invalid URL
 	source := &models.Source{
@@ -100,7 +105,7 @@ func TestWorker_ProcessScrapeJob_404Error(t *testing.T) {
 	}
 
 	db := setupTestDB()
-	worker := NewWorker(db, nil, nil, nil) // No embedding service or storage in tests
+	worker := newTestWorker(db)
 
 	// Create a source with URL that will return 404
 	source := &models.Source{
@@ -131,7 +136,7 @@ func TestWorker_ProcessScrapeJob_StatusUpdates(t *testing.T) {
 	// It's more of a unit test for the status update logic
 
 	db := setupTestDB()
-	worker := NewWorker(db, nil, nil, nil) // No embedding service or storage in tests
+	worker := newTestWorker(db)
 
 	source := &models.Source{
 		BotID:      "test-bot",
@@ -158,7 +163,7 @@ func TestWorker_ChunkCreation(t *testing.T) {
 	}
 
 	db := setupTestDB()
-	worker := NewWorker(db, nil, nil, nil) // No embedding service or storage in tests
+	worker := newTestWorker(db)
 
 	source := &models.Source{
 		BotID:      "test-bot",

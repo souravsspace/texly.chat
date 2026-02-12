@@ -1,15 +1,15 @@
 # Phase 5: Infrastructure & Performance (Redis Layer)
 
 ## Goal
-Implement Redis caching layer to handle 1k+ concurrent write requests and improve overall system performance.
+Implement Redis caching layer to handle 10k+ concurrent write requests and improve overall system performance.
 
 ---
 
 ## Problem Statement
-- SQLite in WAL mode can handle concurrent reads well, but heavy concurrent writes (1k+) can cause bottlenecks
-- Need intelligent caching to reduce database load
+- Need intelligent caching to reduce database load and improve performance
 - Need rate limiting to prevent abuse
 - Need session management for distributed deployments
+- Need to handle 10k+ concurrent write requests efficiently
 
 ---
 
@@ -101,7 +101,7 @@ Implement Redis caching layer to handle 1k+ concurrent write requests and improv
 - [ ] Create `internal/worker/write_worker.go`:
   - [ ] Poll Redis queue every 100ms
   - [ ] Batch up to 100 writes per transaction
-  - [ ] Use SQLite transaction for atomic batch commit
+  - [ ] Use PostgreSQL transaction for atomic batch commit
   - [ ] Log failures and retry up to 3 times
   - [ ] Move to dead letter queue after max retries
 
@@ -140,11 +140,11 @@ Implement Redis caching layer to handle 1k+ concurrent write requests and improv
 
 #### 5.1 Migrate Sessions to Redis
 - [ ] Update `internal/services/session/session_service.go`:
-  - [ ] Store sessions in Redis instead of SQLite
+  - [ ] Store sessions in Redis instead of PostgreSQL
   - [ ] Set TTL for auto-expiration (24 hours)
   - [ ] Use session ID as key
   - [ ] Store full session data as JSON
-- [ ] Keep chat history in SQLite (permanent storage)
+- [ ] Keep chat history in PostgreSQL (permanent storage)
 - [ ] Use Redis for active session tracking only
 
 ---
@@ -167,7 +167,7 @@ Implement Redis caching layer to handle 1k+ concurrent write requests and improv
 
 #### 6.3 Add Monitoring Endpoint
 - [ ] Create `internal/handlers/health/health_handler.go`:
-  - [ ] `/health/db` - SQLite status & pool stats
+  - [ ] `/health/db` - PostgreSQL status & pool stats
   - [ ] `/health/redis` - Redis status & pool stats
   - [ ] `/health/cache` - Cache hit/miss rates
   - [ ] Return metrics in JSON format
@@ -240,7 +240,7 @@ Implement Redis caching layer to handle 1k+ concurrent write requests and improv
 - [ ] Test cache hit/miss ratios
 
 ### Load Tests
-- [ ] Simulate 1k concurrent writes
+- [ ] Simulate 10k concurrent writes
 - [ ] Measure database load with/without Redis
 - [ ] Verify cache reduces DB queries by >70%
 - [ ] Ensure no data loss in write buffer
@@ -249,7 +249,7 @@ Implement Redis caching layer to handle 1k+ concurrent write requests and improv
 
 ## Success Metrics
 
-- [ ] Handle 1k+ concurrent write requests without errors
+- [ ] Handle 10k+ concurrent write requests without errors
 - [ ] Cache hit rate >70% for read operations
 - [ ] API response time <200ms (p95)
 - [ ] Database write load reduced by >80%
@@ -262,7 +262,7 @@ Implement Redis caching layer to handle 1k+ concurrent write requests and improv
 
 If Redis causes issues:
 1. Feature flag to disable Redis caching
-2. Fall back to direct SQLite reads/writes
+2. Fall back to direct PostgreSQL reads/writes
 3. Keep rate limiting in-memory (per-server basis)
 4. Monitor for performance degradation
 

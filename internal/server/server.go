@@ -8,12 +8,13 @@ import (
 	"syscall"
 
 	"github.com/gin-gonic/gin"
-	"github.com/redis/go-redis/v9"
 	"github.com/souravsspace/texly.chat/configs"
+	"github.com/souravsspace/texly.chat/internal/db"
 	analyticsHandlerPkg "github.com/souravsspace/texly.chat/internal/handlers/analytics"
 	"github.com/souravsspace/texly.chat/internal/handlers/auth"
 	botHandlerPkg "github.com/souravsspace/texly.chat/internal/handlers/bot"
 	chatHandlerPkg "github.com/souravsspace/texly.chat/internal/handlers/chat"
+	healthHandlerPkg "github.com/souravsspace/texly.chat/internal/handlers/health"
 	publicHandlerPkg "github.com/souravsspace/texly.chat/internal/handlers/public"
 	sourceHandlerPkg "github.com/souravsspace/texly.chat/internal/handlers/source"
 	userHandlerPkg "github.com/souravsspace/texly.chat/internal/handlers/user"
@@ -26,6 +27,7 @@ import (
 	userRepoPkg "github.com/souravsspace/texly.chat/internal/repo/user"
 	vectorRepoPkg "github.com/souravsspace/texly.chat/internal/repo/vector"
 	"github.com/souravsspace/texly.chat/internal/services/analytics"
+	"github.com/souravsspace/texly.chat/internal/services/cache"
 	"github.com/souravsspace/texly.chat/internal/services/chat"
 	"github.com/souravsspace/texly.chat/internal/services/embedding"
 	"github.com/souravsspace/texly.chat/internal/services/oauth"
@@ -69,29 +71,23 @@ func (s *Server) Run() error {
 	defer cancel()
 
 	/*
+	* Redis Client & Cache Service
+	 */
+	redisClient := db.GetRedisClient()
+	cacheService := cache.NewCacheService(redisClient)
+
+	/*
 	* Repositories
 	 */
-	userRepo := userRepoPkg.NewUserRepo(s.db)
-	botRepo := botRepoPkg.NewBotRepo(s.db)
-	sourceRepo := sourceRepoPkg.NewSourceRepo(s.db)
+	userRepo := userRepoPkg.NewUserRepo(s.db, cacheService)
+	botRepo := botRepoPkg.NewBotRepo(s.db, cacheService)
+	sourceRepo := sourceRepoPkg.NewSourceRepo(s.db, cacheService)
 	messageRepo := messageRepoPkg.New(s.db)
 
 	/*
 	* Queue and Worker
 	 */
-	/*
-	* Queue and Worker
-	 */
 	jobQueue := queue.NewInMemoryQueue(100, 3) // buffer: 100, workers: 3
-
-	/*
-	* Redis Client
-	 */
-	opt, err := redis.ParseURL(s.cfg.RedisURL)
-	if err != nil {
-		return fmt.Errorf("failed to parse Redis URL: %w", err)
-	}
-	redisClient := redis.NewClient(opt)
 
 	/*
 	* OAuth Services
@@ -143,7 +139,7 @@ func (s *Server) Run() error {
 		fmt.Println("⚠️  OpenAI API key not configured - vector embeddings and chat disabled")
 	}
 
-	workerInstance := worker.NewWorker(s.db, embeddingService, vectorRepo, storageService)
+	workerInstance := worker.NewWorker(s.db, embeddingService, vectorRepo, storageService, sourceRepo)
 
 	// Start worker pool
 	jobQueue.Start(ctx, workerInstance.ProcessScrapeJob)
@@ -163,15 +159,17 @@ func (s *Server) Run() error {
 	/*
 	* Handlers
 	 */
-	/*
-	* Handlers
-	 */
 	authHandler := auth.NewAuthHandler(userRepo, s.cfg)
 	googleHandler := auth.NewGoogleHandler(oauthService, oauthStateService, s.cfg)
 	userHandler := userHandlerPkg.NewUserHandler(userRepo)
 	sourceHandler := sourceHandlerPkg.NewSourceHandler(sourceRepo, botRepo, jobQueue, storageService, s.cfg.MaxUploadSizeMB)
 	analyticsService := analytics.NewAnalyticsService(messageRepo)
 	analyticsHandler := analyticsHandlerPkg.NewAnalyticsHandler(analyticsService)
+
+	/*
+	* Health Endpoints
+	 */
+	healthHandler := healthHandlerPkg.NewHealthHandler(s.db, redisClient)
 
 	/*
 	* Middleware
@@ -192,6 +190,11 @@ func (s *Server) Run() error {
 	/*
 	* Routes
 	 */
+	// Health routes (no auth required)
+	s.engine.GET("/health", healthHandler.GetBasicHealth)
+	s.engine.GET("/health/db", healthHandler.GetDBHealth)
+	s.engine.GET("/health/redis", healthHandler.GetRedisHealth)
+
 	apiGroup := s.engine.Group("/api")
 	{
 		/*
@@ -232,7 +235,7 @@ func (s *Server) Run() error {
 		/*
 		* Chat routes
 		 */
-		chatHandler := chatHandlerPkg.NewChatHandler(s.db, chatService)
+		chatHandler := chatHandlerPkg.NewChatHandler(botRepo, chatService)
 		apiGroup.POST("/bots/:id/chat", authMiddleware.Auth(s.cfg), chatHandler.StreamChat)
 
 		/*

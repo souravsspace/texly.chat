@@ -17,7 +17,7 @@ import (
 
 func TestUserHandler_GetMe(t *testing.T) {
 	testDB := shared.SetupTestDB()
-	userRepo := repo.NewUserRepo(testDB)
+	userRepo := repo.NewUserRepo(testDB, nil)
 	handler := NewUserHandler(userRepo)
 
 	userID := uuid.New().String()

@@ -11,7 +11,7 @@ import (
 
 func TestSourceRepo_Create(t *testing.T) {
 	testDB := shared.SetupTestDB()
-	repo := NewSourceRepo(testDB)
+	repo := NewSourceRepo(testDB, nil)
 
 	source := &models.Source{
 		ID:     uuid.New().String(),
@@ -35,7 +35,7 @@ func TestSourceRepo_Create(t *testing.T) {
 
 func TestSourceRepo_GetByID(t *testing.T) {
 	testDB := shared.SetupTestDB()
-	repo := NewSourceRepo(testDB)
+	repo := NewSourceRepo(testDB, nil)
 
 	source := &models.Source{
 		ID:     uuid.New().String(),
@@ -61,7 +61,7 @@ func TestSourceRepo_GetByID(t *testing.T) {
 
 func TestSourceRepo_ListByBotID(t *testing.T) {
 	testDB := shared.SetupTestDB()
-	repo := NewSourceRepo(testDB)
+	repo := NewSourceRepo(testDB, nil)
 
 	botID := "bot-1"
 	source1 := &models.Source{
@@ -106,7 +106,7 @@ func TestSourceRepo_ListByBotID(t *testing.T) {
 
 func TestSourceRepo_UpdateStatus(t *testing.T) {
 	testDB := shared.SetupTestDB()
-	repo := NewSourceRepo(testDB)
+	repo := NewSourceRepo(testDB, nil)
 
 	source := &models.Source{
 		ID:     uuid.New().String(),
@@ -151,7 +151,7 @@ func TestSourceRepo_UpdateStatus(t *testing.T) {
 
 func TestSourceRepo_Delete(t *testing.T) {
 	testDB := shared.SetupTestDB()
-	repo := NewSourceRepo(testDB)
+	repo := NewSourceRepo(testDB, nil)
 
 	source := &models.Source{
 		ID:     uuid.New().String(),
@@ -180,7 +180,7 @@ func TestSourceRepo_Delete(t *testing.T) {
 
 func TestSourceRepo_GetByBotIDAndSourceID(t *testing.T) {
 	testDB := shared.SetupTestDB()
-	repo := NewSourceRepo(testDB)
+	repo := NewSourceRepo(testDB, nil)
 
 	source := &models.Source{
 		ID:     uuid.New().String(),

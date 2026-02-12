@@ -14,6 +14,12 @@ import (
 func main() {
 	cfg := configs.Load()
 
+	// Initialize Redis client singleton
+	if err := db.InitRedis(cfg.RedisURL, cfg.RedisMaxConns, cfg.RedisMinIdleConns); err != nil {
+		log.Fatalf("failed to initialize Redis: %v", err)
+	}
+	defer db.CloseRedis()
+
 	gormDb, err := db.Connect(cfg.DatabaseURL)
 	if err != nil {
 		log.Fatalf("failed to connect db: %v", err)

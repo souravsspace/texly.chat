@@ -99,3 +99,18 @@ docker-clean:
 	@echo "Cleaning Docker containers, images, and volumes..."
 	@docker-compose --env-file .env.prd down -v --rmi local
 	@echo "✓ Docker cleaned"
+
+# Redis helpers
+redis-cli:
+	@docker exec -it texly-redis redis-cli
+
+redis-flush:
+	@docker exec -it texly-redis redis-cli FLUSHALL
+	@echo "✓ Redis cache flushed"
+
+redis-monitor:
+	@docker exec -it texly-redis redis-cli MONITOR
+
+cache-stats:
+	@curl -s http://localhost:8080/health/redis | python3 -m json.tool
+
