@@ -17,7 +17,7 @@ dev-api:
 	fi
 
 # Build production binary with embedded UI
-build: build-widget build-ui build-api
+build: ui-types build-widget build-ui build-api
 	@echo "✓ Build complete! Binary at: dist/texly.chat"
 
 build-widget:

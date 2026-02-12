@@ -207,6 +207,20 @@ export interface SitemapResponse {
 }
 
 /*
+ * UsageRecord tracks a single billable event
+ */
+export interface UsageRecord {
+  id: string;
+  user_id: string;
+  bot_id: string;
+  type: string;
+  quantity: number;
+  cost: number;
+  billed_at: string | Date;
+  created_at: string | Date;
+}
+
+/*
  * User represents a registered user in the system
  */
 export interface User {
@@ -216,6 +230,15 @@ export interface User {
   avatar: string;
   google_id: string | null;
   auth_provider: string;
+  tier: string;
+  polar_customer_id: string | null;
+  subscription_id: string;
+  subscription_status: string;
+  billing_cycle_start: string | Date;
+  billing_cycle_end: string | Date;
+  credits_balance: number;
+  credits_allocated: number;
+  current_period_usage: number;
   created_at: string | Date;
   updated_at: string | Date;
 }

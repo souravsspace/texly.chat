@@ -53,7 +53,7 @@ type SearchResult struct {
  */
 func (s *SearchService) SearchSimilar(ctx context.Context, query string, botID string, limit int) ([]SearchResult, error) {
 	// Generate embedding for the query
-	queryEmbedding, err := s.embeddingService.GenerateEmbedding(ctx, query)
+	queryEmbedding, _, err := s.embeddingService.GenerateEmbedding(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate query embedding: %w", err)
 	}
@@ -139,7 +139,7 @@ func (s *SearchService) SearchSimilarByEmbedding(ctx context.Context, embedding 
  */
 func (s *SearchService) SearchMultipleBots(ctx context.Context, query string, botIDs []string, limit int) ([]SearchResult, error) {
 	// Generate embedding for the query
-	queryEmbedding, err := s.embeddingService.GenerateEmbedding(ctx, query)
+	queryEmbedding, _, err := s.embeddingService.GenerateEmbedding(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate query embedding: %w", err)
 	}

@@ -11,7 +11,9 @@ import (
 	"github.com/souravsspace/texly.chat/internal/queue"
 	botRepo "github.com/souravsspace/texly.chat/internal/repo/bot"
 	sourceRepo "github.com/souravsspace/texly.chat/internal/repo/source"
+	usage "github.com/souravsspace/texly.chat/internal/services/billing/usage"
 	"github.com/souravsspace/texly.chat/internal/services/scraper"
+	"github.com/souravsspace/texly.chat/internal/services/sitemap"
 	"github.com/souravsspace/texly.chat/internal/services/storage"
 )
 
@@ -23,18 +25,20 @@ type SourceHandler struct {
 	botRepo     *botRepo.BotRepo
 	jobQueue    queue.JobQueue
 	storageSvc  *storage.MinIOStorageService
+	usageSvc    *usage.UsageService
 	maxUploadMB int
 }
 
 /*
 * NewSourceHandler creates a new source handler
  */
-func NewSourceHandler(sourceRepo *sourceRepo.SourceRepo, botRepo *botRepo.BotRepo, jobQueue queue.JobQueue, storageSvc *storage.MinIOStorageService, maxUploadMB int) *SourceHandler {
+func NewSourceHandler(sourceRepo *sourceRepo.SourceRepo, botRepo *botRepo.BotRepo, jobQueue queue.JobQueue, storageSvc *storage.MinIOStorageService, usageSvc *usage.UsageService, maxUploadMB int) *SourceHandler {
 	return &SourceHandler{
 		sourceRepo:  sourceRepo,
 		botRepo:     botRepo,
 		jobQueue:    jobQueue,
 		storageSvc:  storageSvc,
+		usageSvc:    usageSvc,
 		maxUploadMB: maxUploadMB,
 	}
 }
@@ -278,6 +282,12 @@ func (h *SourceHandler) UploadFileSource(c *gin.Context) {
 		return
 	}
 
+	// Track storage usage (Billable user is uploader/bot-owner)
+	if h.usageSvc != nil {
+		sizeGB := float64(header.Size) / (1024 * 1024 * 1024)
+		_ = h.usageSvc.TrackStorage(userID.(string), sizeGB)
+	}
+
 	// Generate MinIO object name
 	objectName := h.storageSvc.GenerateObjectName(source.ID, header.Filename)
 
@@ -456,16 +466,30 @@ func (h *SourceHandler) CreateSitemapSource(c *gin.Context) {
 	}
 
 	// Parse and fetch sitemap URLs
-	sitemapParser := scraper.NewSitemapParser(1000) // Max 1000 URLs
+	sitemapParser := sitemap.NewSitemapParser(1000) // Max 1000 URLs
 	urls, err := sitemapParser.ParseSitemap(req.URL)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Failed to parse sitemap: %v", err)})
-		return
-	}
-
-	if len(urls) == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "No URLs found in sitemap"})
-		return
+	if err != nil || len(urls) == 0 {
+		// Fallback: If sitemap parsing fails or returns no URLs, try scanning the website directly
+		fmt.Printf("Sitemap parsing failed or empty (err=%v), falling back to crawling: %s\n", err, req.URL)
+		
+		scraperParams := scraper.NewScraperService()
+		scannedLinks, scanErr := scraperParams.ScanLinks(req.URL)
+		if scanErr != nil {
+			// If both fail, return the original sitemap error or scan error
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Failed to discover sitemap or scan links: %v", err)})
+			} else {
+				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Failed to scan links: %v", scanErr)})
+			}
+			return
+		}
+		
+		if len(scannedLinks) == 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "No URLs found in sitemap or on the page"})
+			return
+		}
+		
+		urls = scannedLinks
 	}
 
 	// Create sources for each URL and enqueue jobs

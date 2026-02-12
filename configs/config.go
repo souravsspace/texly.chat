@@ -40,6 +40,13 @@ type Config struct {
 	GoogleClientSecret string
 	GoogleRedirectURL  string
 	FrontendURL        string
+
+	// Polar Payment Configuration
+	PolarAccessToken    string
+	PolarWebhookSecret  string
+	PolarOrganizationID string
+	PolarProProductID   string
+	PolarServerURL      string
 }
 
 /*
@@ -76,6 +83,11 @@ func Load() Config {
 		GoogleClientSecret:   getEnv("GOOGLE_CLIENT_SECRET", false),
 		GoogleRedirectURL:    getEnv("GOOGLE_REDIRECT_URL", false),
 		FrontendURL:          getEnv("FRONTEND_URL", false, "http://localhost:5173"),
+		PolarAccessToken:     getEnv("POLAR_ACCESS_TOKEN", false),
+		PolarWebhookSecret:   getEnv("POLAR_WEBHOOK_SECRET", false),
+		PolarOrganizationID:  getEnv("POLAR_ORGANIZATION_ID", false),
+		PolarProProductID:    getEnv("POLAR_PRO_PRODUCT_ID", false),
+		PolarServerURL:       getEnv("POLAR_SERVER_URL", false, "https://api.polar.sh"),
 	}
 }
 

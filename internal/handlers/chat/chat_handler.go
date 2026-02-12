@@ -2,11 +2,13 @@ package chat
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/souravsspace/texly.chat/internal/models"
 	botRepo "github.com/souravsspace/texly.chat/internal/repo/bot"
+	usage "github.com/souravsspace/texly.chat/internal/services/billing/usage"
 	"github.com/souravsspace/texly.chat/internal/services/chat"
 )
 
@@ -16,15 +18,17 @@ import (
 type ChatHandler struct {
 	botRepo     *botRepo.BotRepo
 	chatService *chat.ChatService
+	usageSvc    *usage.UsageService
 }
 
 /*
  * NewChatHandler creates a new chat handler instance
  */
-func NewChatHandler(botRepo *botRepo.BotRepo, chatService *chat.ChatService) *ChatHandler {
+func NewChatHandler(botRepo *botRepo.BotRepo, chatService *chat.ChatService, usageSvc *usage.UsageService) *ChatHandler {
 	return &ChatHandler{
 		botRepo:     botRepo,
 		chatService: chatService,
+		usageSvc:    usageSvc,
 	}
 }
 
@@ -69,6 +73,22 @@ func (h *ChatHandler) StreamChat(c *gin.Context) {
 	if h.chatService == nil {
 		c.JSON(http.StatusServiceUnavailable, gin.H{"message": "Chat service not available"})
 		return
+	}
+
+	// Track usage (billing owner is Bot.UserID)
+	if h.usageSvc != nil {
+		if err := h.usageSvc.TrackChatMessage(bot.UserID, bot.ID); err != nil {
+			// Failed to track usage/charge - should we block?
+			// For now, log error and proceed, or block if strict
+			// Ideally we block if payment required
+			fmt.Printf("Error tracking chat usage: %v\n", err)
+			// If we want to block on insufficient funds (already handled in UsageService which returns error? 
+			// UsageService returns error if DB error. It updates balance but doesn't strictly block UNLESS logic added.
+			// Current UsageService implementation returns error only on DB failure.
+			// Pro tier logic: "Deduct from credits if available".
+			// If 0 credits, we assume pay-as-you-go and just record usage.
+			// So we don't block here unless DB fails.
+		}
 	}
 
 	// Stream tokens using manual SSE writing

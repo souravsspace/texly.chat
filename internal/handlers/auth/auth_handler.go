@@ -39,8 +39,11 @@ func (h *AuthHandler) Signup(c *gin.Context) {
 		return
 	}
 
+
+
 	existing, err := h.userRepo.GetByEmail(req.Email)
 	if err != nil {
+		log.Printf("Database error checking email: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "database error"})
 		return
 	}
@@ -51,6 +54,7 @@ func (h *AuthHandler) Signup(c *gin.Context) {
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
+		log.Printf("Password hashing failed: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to hash password"})
 		return
 	}
@@ -64,6 +68,7 @@ func (h *AuthHandler) Signup(c *gin.Context) {
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
+
 
 	if err := h.userRepo.Create(user); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to create user"})

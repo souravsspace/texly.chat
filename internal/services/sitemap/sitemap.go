@@ -1,4 +1,4 @@
-package scraper
+package sitemap
 
 import (
 	"encoding/xml"
@@ -144,7 +144,13 @@ func (p *SitemapParser) discoverSitemapURL(baseURL string) (string, error) {
  * findSitemapInRobots tries to find sitemap URL in robots.txt
  */
 func (p *SitemapParser) findSitemapInRobots(robotsURL string) (string, error) {
-	resp, err := p.client.Get(robotsURL)
+	req, err := http.NewRequest("GET", robotsURL, nil)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("User-Agent", "TexlyBot/1.0 (+https://texly.chat)")
+
+	resp, err := p.client.Do(req)
 	if err != nil {
 		return "", err
 	}
@@ -176,7 +182,13 @@ func (p *SitemapParser) findSitemapInRobots(robotsURL string) (string, error) {
  * urlExists checks if a URL returns a 200 status code
  */
 func (p *SitemapParser) urlExists(url string) bool {
-	resp, err := p.client.Head(url)
+	req, err := http.NewRequest("HEAD", url, nil)
+	if err != nil {
+		return false
+	}
+	req.Header.Set("User-Agent", "TexlyBot/1.0 (+http://texly.ai)")
+
+	resp, err := p.client.Do(req)
 	if err != nil {
 		return false
 	}
@@ -188,7 +200,13 @@ func (p *SitemapParser) urlExists(url string) bool {
  * fetchAndParse fetches a sitemap URL and parses all URLs (handles sitemap indexes)
  */
 func (p *SitemapParser) fetchAndParse(sitemapURL string) ([]string, error) {
-	resp, err := p.client.Get(sitemapURL)
+	req, err := http.NewRequest("GET", sitemapURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("User-Agent", "TexlyBot/1.0 (+http://texly.ai)")
+
+	resp, err := p.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch sitemap: %w", err)
 	}
@@ -252,9 +270,9 @@ func (p *SitemapParser) parseSitemapIndex(index SitemapIndex) ([]string, error) 
 }
 
 /*
- * filterURLs filters out non-content URLs (images, PDFs, etc.)
+ * FilterURLs filters out non-content URLs (images, PDFs, etc.)
  */
-func (p *SitemapParser) filterURLs(urls []string) []string {
+func FilterURLs(urls []string) []string {
 	// File extensions to exclude
 	excludedExtensions := []string{
 		".jpg", ".jpeg", ".png", ".gif", ".svg", ".webp", ".ico",
@@ -289,4 +307,11 @@ func (p *SitemapParser) filterURLs(urls []string) []string {
 	}
 
 	return filtered
+}
+
+/*
+ * filterURLs keeps the method signature for backward compatibility but calls the new function
+ */
+func (p *SitemapParser) filterURLs(urls []string) []string {
+	return FilterURLs(urls)
 }

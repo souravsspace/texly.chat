@@ -1,4 +1,4 @@
-package scraper
+package sitemap
 
 import (
 	"encoding/xml"

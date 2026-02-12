@@ -26,12 +26,12 @@ func TestNewEmbeddingService(t *testing.T) {
 * TestGenerateEmbedding tests single embedding generation
  */
 func TestGenerateEmbedding(t *testing.T) {
-	t.Skip("Skipping test - requires OpenAI API endpoint override mechanism")
+	// t.Skip("Skipping test - requires OpenAI API endpoint override mechanism")
 
 	// Mock OpenAI API server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "POST", r.Method)
-		assert.Equal(t, "/v1/embeddings", r.URL.Path)
+		assert.Equal(t, "/embeddings", r.URL.Path)
 		assert.Contains(t, r.Header.Get("Authorization"), "Bearer")
 
 		w.Header().Set("Content-Type", "application/json")
@@ -55,11 +55,14 @@ func TestGenerateEmbedding(t *testing.T) {
 	service := NewEmbeddingService("test-key", "text-embedding-3-small", 3)
 	service.httpClient = server.Client()
 
-	// Override endpoint for testing (normally we'd use dependency injection)
-	// For now, we'll just test the parsing logic
+	// Override endpoint for testing
+	service.SetBaseURL(server.URL)
 
 	ctx := context.Background()
-	embedding, err := service.GenerateEmbedding(ctx, "test text")
+	embedding, tokens, err := service.GenerateEmbedding(ctx, "test text")
+
+	require.NoError(t, err)
+	assert.Equal(t, 10, tokens)
 
 	require.NoError(t, err)
 	assert.NotNil(t, embedding)
@@ -73,7 +76,7 @@ func TestGenerateEmbedding(t *testing.T) {
 * TestGenerateEmbeddings tests batch embedding generation
  */
 func TestGenerateEmbeddings(t *testing.T) {
-	t.Skip("Skipping test - requires OpenAI API endpoint override mechanism")
+	// t.Skip("Skipping test - requires OpenAI API endpoint override mechanism")
 
 	// Mock OpenAI API server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -102,10 +105,13 @@ func TestGenerateEmbeddings(t *testing.T) {
 	service := NewEmbeddingService("test-key", "text-embedding-3-small", 2)
 	service.httpClient = server.Client()
 
+	service.SetBaseURL(server.URL)
+
 	ctx := context.Background()
-	embeddings, err := service.GenerateEmbeddings(ctx, []string{"text1", "text2"})
+	embeddings, tokens, err := service.GenerateEmbeddings(ctx, []string{"text1", "text2"})
 
 	require.NoError(t, err)
+	assert.Equal(t, 20, tokens)
 	assert.Len(t, embeddings, 2)
 	assert.Equal(t, float32(0.1), embeddings[0][0])
 	assert.Equal(t, float32(0.3), embeddings[1][0])
@@ -124,7 +130,7 @@ func TestGenerateEmbeddings_TooManyTexts(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	_, err := service.GenerateEmbeddings(ctx, texts)
+	_, _, err := service.GenerateEmbeddings(ctx, texts)
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "too many texts")
@@ -137,7 +143,7 @@ func TestGenerateEmbeddings_EmptyInput(t *testing.T) {
 	service := NewEmbeddingService("test-key", "text-embedding-3-small", 1536)
 
 	ctx := context.Background()
-	embeddings, err := service.GenerateEmbeddings(ctx, []string{})
+	embeddings, _, err := service.GenerateEmbeddings(ctx, []string{})
 
 	require.NoError(t, err)
 	assert.Empty(t, embeddings)
@@ -147,7 +153,7 @@ func TestGenerateEmbeddings_EmptyInput(t *testing.T) {
 * TestEmbedChunks tests convenience method for embedding document chunks
  */
 func TestEmbedChunks(t *testing.T) {
-	t.Skip("Skipping test - requires OpenAI API endpoint override mechanism")
+	// t.Skip("Skipping test - requires OpenAI API endpoint override mechanism")
 
 	// Mock OpenAI API server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -179,10 +185,13 @@ func TestEmbedChunks(t *testing.T) {
 		},
 	}
 
+	service.SetBaseURL(server.URL)
+
 	ctx := context.Background()
-	embeddings, err := service.EmbedChunks(ctx, chunks)
+	embeddings, tokens, err := service.EmbedChunks(ctx, chunks)
 
 	require.NoError(t, err)
+	assert.Equal(t, 10, tokens)
 	assert.Len(t, embeddings, 1)
 	assert.Equal(t, float32(0.5), embeddings[0][0])
 }

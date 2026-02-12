@@ -9,8 +9,10 @@ import (
 
 	"github.com/souravsspace/texly.chat/internal/models"
 	"github.com/souravsspace/texly.chat/internal/queue"
+	botRepo "github.com/souravsspace/texly.chat/internal/repo/bot"
 	sourceRepo "github.com/souravsspace/texly.chat/internal/repo/source"
 	vectorRepo "github.com/souravsspace/texly.chat/internal/repo/vector"
+	billing "github.com/souravsspace/texly.chat/internal/services/billing/usage"
 	"github.com/souravsspace/texly.chat/internal/services/chunker"
 	"github.com/souravsspace/texly.chat/internal/services/embedding"
 	"github.com/souravsspace/texly.chat/internal/services/extractor"
@@ -25,10 +27,12 @@ import (
 type Worker struct {
 	db             *gorm.DB
 	sourceRepo     *sourceRepo.SourceRepo
+	botRepo        *botRepo.BotRepo
 	vectorRepo     *vectorRepo.VectorRepository
 	scraperSvc     *scraper.ScraperService
 	embeddingSvc   *embedding.EmbeddingService
 	storageSvc     *storage.MinIOStorageService
+	usageSvc       *billing.UsageService
 	pdfExtractor   *extractor.PDFExtractor
 	excelParser    *extractor.ExcelParser
 	textReader     *extractor.TextReader
@@ -44,14 +48,18 @@ func NewWorker(
 	vectorRepo *vectorRepo.VectorRepository,
 	storageSvc *storage.MinIOStorageService,
 	sourceRepoInstance *sourceRepo.SourceRepo,
+	botRepoInstance *botRepo.BotRepo,
+	usageSvc *billing.UsageService,
 ) *Worker {
 	return &Worker{
 		db:             db,
 		sourceRepo:     sourceRepoInstance,
+		botRepo:        botRepoInstance,
 		vectorRepo:     vectorRepo,
 		scraperSvc:     scraper.NewScraperService(),
 		embeddingSvc:   embeddingSvc,
 		storageSvc:     storageSvc,
+		usageSvc:       usageSvc,
 		pdfExtractor:   extractor.NewPDFExtractor(),
 		excelParser:    extractor.NewExcelParser(),
 		textReader:     extractor.NewTextReader(),
@@ -127,13 +135,24 @@ func (w *Worker) ProcessScrapeJob(job queue.Job) error {
 		ctx := context.Background()
 		fmt.Printf("Generating embeddings for %d chunks...\n", len(savedChunks))
 
-		embeddings, err := w.embeddingSvc.EmbedChunks(ctx, savedChunks)
+		embeddings, tokens, err := w.embeddingSvc.EmbedChunks(ctx, savedChunks)
 		if err != nil {
 			// Log error but don't fail the whole job
 			errMsg := fmt.Sprintf("Warning: Failed to generate embeddings: %v", err)
 			fmt.Println(errMsg)
 			// Continue without embeddings - chunks are still searchable via full-text
 		} else {
+			// Track usage
+			// Need to find owner of the bot
+			if w.botRepo != nil && w.usageSvc != nil {
+				// We don't have bot loaded, need to fetch it
+				// Use public/admin method since we don't have userID
+				bot, err := w.botRepo.GetByIDPublic(job.BotID)
+				if err == nil && bot != nil {
+					_ = w.usageSvc.TrackEmbedding(bot.UserID, tokens)
+				}
+			}
+
 			// Store embeddings in vector database
 			vectorData := make([]vectorRepo.VectorData, len(savedChunks))
 			for i, chunk := range savedChunks {

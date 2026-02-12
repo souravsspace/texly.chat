@@ -44,7 +44,7 @@ func setupRouter(db *gorm.DB, jobQueue queue.JobQueue) *gin.Engine {
 		100,
 	)
 
-	handler := source.NewSourceHandler(sRepo, bRepo, jobQueue, storageService, 100)
+	handler := source.NewSourceHandler(sRepo, bRepo, jobQueue, storageService, nil, 100)
 
 	// Mock Auth middleware
 	r.Use(func(c *gin.Context) {

@@ -54,6 +54,7 @@ func Migrate(db *gorm.DB) error {
 		&models.Source{},
 		&models.DocumentChunk{},
 		&models.Message{},
+		&models.UsageRecord{},
 	)
 	if err != nil {
 		return fmt.Errorf("auto migrate failed: %w", err)

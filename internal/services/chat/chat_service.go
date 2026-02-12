@@ -24,6 +24,8 @@ type ChatService struct {
 	chatModel        openai.ChatModel
 	temperature      float64
 	maxContextChunks int
+	baseURL          string
+	apiKey           string // Store to re-init client
 	client           openai.Client
 }
 
@@ -46,8 +48,20 @@ func NewChatService(
 		chatModel:        openai.ChatModel(chatModel),
 		temperature:      temperature,
 		maxContextChunks: maxContextChunks,
+		apiKey:           apiKey,
 		client:           openai.NewClient(option.WithAPIKey(apiKey)),
 	}
+}
+
+/*
+* SetBaseURL sets a custom API base URL for the OpenAI client (useful for testing)
+ */
+func (s *ChatService) SetBaseURL(url string) {
+	s.baseURL = url
+	s.client = openai.NewClient(
+		option.WithAPIKey(s.apiKey),
+		option.WithBaseURL(url),
+	)
 }
 
 /*

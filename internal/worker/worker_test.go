@@ -21,7 +21,7 @@ func setupTestDB() *gorm.DB {
 }
 
 func newTestWorker(db *gorm.DB) *Worker {
-	return NewWorker(db, nil, nil, nil, sourceRepo.NewSourceRepo(db, nil))
+	return NewWorker(db, nil, nil, nil, sourceRepo.NewSourceRepo(db, nil), nil, nil)
 }
 
 func TestWorker_ProcessScrapeJob_Success(t *testing.T) {

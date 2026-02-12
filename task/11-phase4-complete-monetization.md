@@ -150,47 +150,27 @@ Implement three-tier pricing system with Polar.sh integration, credit-based bill
 
 ### Step 2: Pricing Configuration
 
-#### 2.1 Define Pricing Constants
-- [ ] Create `internal/services/billing/pricing.go`:
-  ```go
-  const (
-      // Profit margin: 70%
-      PricePerMessage      = 0.001   // $0.001 per message (cost: $0.0003)
-      PricePerEmbedding1K  = 0.0002  // $0.0002 per 1k tokens (cost: $0.00006)
-      PricePerGBStorage    = 0.10    // $0.10 per GB/month (cost: $0.03)
-      PricePerExtraBot     = 5.00    // $5/month per bot (cost: $1.50)
-      
-      ProMonthlyPrice      = 20.00   // $20/month base
-      ProIncludedCredits   = 20.00   // $20 in credits
-  )
-  
-  func CalculateMessageCost(count int) float64 {
-      return float64(count) * PricePerMessage
-  }
-  
-  func CalculateEmbeddingCost(tokens int) float64 {
-      return float64(tokens/1000) * PricePerEmbedding1K
-  }
-  
-  func CalculateStorageCost(gb float64) float64 {
-      return gb * PricePerGBStorage
-  }
-  ```
+#### 2.1 Pricing Constants (DONE — `configs/pricing.go`)
+- [x] All pricing constants, tier limits, billing rules, and cost helpers are defined in `configs/pricing.go`
+- [x] This is the **single source of truth** — billing services import from here
+- [x] Key values:
+  - Pro subscription: $20/month (always charged, credits don't roll over)
+  - Included credits: $20/month
+  - Message: $0.001 | Embedding/1K: $0.0002 | Storage/GB: $0.10 | Extra bot: $5.00
+  - 70% profit margin on all pay-as-you-go usage
 
 ---
 
 ### Step 3: Polar.sh Integration (Enhanced)
 
-#### 3.1 Update Polar Configuration
-- [ ] Update `configs/config.go`:
+#### 3.1 Polar Configuration (DONE — `configs/config.go`)
+- [x] Added to `configs/config.go`:
   ```go
-  PolarAPIKey         string
+  PolarAccessToken    string
   PolarWebhookSecret  string
   PolarOrganizationID string
-  
-  // Product IDs from Polar dashboard
-  PolarProProductID       string
-  PolarEnterpriseProductID string // Placeholder (manual only)
+  PolarProProductID   string
+  PolarServerURL      string // defaults to https://api.polar.sh
   ```
 
 #### 3.2 Polar Webhook Handler
@@ -233,7 +213,7 @@ Implement three-tier pricing system with Polar.sh integration, credit-based bill
 ### Step 4: Usage Tracking & Metering
 
 #### 4.1 Create Usage Service
-- [ ] Create `internal/services/billing/usage_service.go`:
+- [x] Create `internal/services/billing/usage_service.go`:
   - [ ] `TrackChatMessage(userID, botID) error`
     - [ ] Check if user has credits or is free/enterprise
     - [ ] Deduct from credits if Pro
@@ -250,7 +230,7 @@ Implement three-tier pricing system with Polar.sh integration, credit-based bill
     - [ ] Return current period usage breakdown
 
 #### 4.2 Credit Management
-- [ ] Create `internal/services/billing/credits_service.go`:
+- [x] Create `internal/services/billing/credits_service.go`:
   - [ ] `DeductCredits(userID, amount) error`
     - [ ] Check balance
     - [ ] Deduct if sufficient
@@ -260,7 +240,7 @@ Implement three-tier pricing system with Polar.sh integration, credit-based bill
   - [ ] `GetCreditsBalance(userID) (float64, error)`
 
 #### 4.3 Integrate Usage Tracking
-- [ ] Update `internal/services/chat/chat_service.go`:
+- [x] Update `internal/services/chat/chat_service.go`:
   - [ ] Call `usageService.TrackChatMessage()` after each message
 - [ ] Update `internal/services/embedding/embedding.go`:
   - [ ] Call `usageService.TrackEmbedding()` after embedding generation
@@ -272,7 +252,7 @@ Implement three-tier pricing system with Polar.sh integration, credit-based bill
 ### Step 5: Entitlement Middleware (Enhanced)
 
 #### 5.1 Update Entitlement Middleware
-- [ ] Update `internal/middleware/entitlement.go`:
+- [x] Update `internal/middleware/entitlement.go`:
   ```go
   func EnforceLimit(limitType string) gin.HandlerFunc {
       return func(c *gin.Context) {
@@ -315,7 +295,7 @@ Implement three-tier pricing system with Polar.sh integration, credit-based bill
   ```
 
 #### 5.2 Apply Middleware to Routes
-- [ ] Bot creation: `EnforceLimit("bot_creation")`
+- [x] Bot creation: `EnforceLimit("bot_creation")`
 - [ ] Message send: `EnforceLimit("message_send")`
 - [ ] Source creation: `EnforceLimit("source_creation")`
 - [ ] File upload: `EnforceLimit("storage")`
@@ -344,7 +324,7 @@ Implement three-tier pricing system with Polar.sh integration, credit-based bill
 ### Step 7: Billing Cycle Management
 
 #### 7.1 Create Billing Cron Job
-- [ ] Create `internal/worker/billing_worker.go`:
+- [x] Create `internal/worker/billing_worker.go`:
   - [ ] Run daily at midnight UTC
   - [ ] Find users with billing cycle end date = today
   - [ ] Refresh Pro tier credits ($20)

@@ -56,7 +56,9 @@ func SetupTestDB() *gorm.DB {
 	// document_chunks depends on sources, messages/sources depend on bots, bots depends on users
 	tables := []string{"document_chunks", "messages", "sources", "bots", "users"}
 	for _, table := range tables {
-		db.Exec(fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE", table))
+		if err := db.Exec(fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE", table)).Error; err != nil {
+			log.Fatalf("Failed to drop table %s: %v", table, err)
+		}
 	}
 
 	// Run migrations in proper dependency order
@@ -67,6 +69,7 @@ func SetupTestDB() *gorm.DB {
 		&models.Source{},
 		&models.Message{},
 		&models.DocumentChunk{},
+		&models.UsageRecord{},
 	); err != nil {
 		log.Fatalf("Failed to migrate test database: %v", err)
 	}

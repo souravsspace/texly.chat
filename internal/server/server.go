@@ -18,8 +18,10 @@ import (
 	publicHandlerPkg "github.com/souravsspace/texly.chat/internal/handlers/public"
 	sourceHandlerPkg "github.com/souravsspace/texly.chat/internal/handlers/source"
 	userHandlerPkg "github.com/souravsspace/texly.chat/internal/handlers/user"
-	"github.com/souravsspace/texly.chat/internal/middleware"
 	authMiddleware "github.com/souravsspace/texly.chat/internal/middleware/auth"
+	corsMiddleware "github.com/souravsspace/texly.chat/internal/middleware/cors"
+	middleware "github.com/souravsspace/texly.chat/internal/middleware/entitlement"
+	rateLimitMiddleware "github.com/souravsspace/texly.chat/internal/middleware/rate_limit"
 	"github.com/souravsspace/texly.chat/internal/queue"
 	botRepoPkg "github.com/souravsspace/texly.chat/internal/repo/bot"
 	messageRepoPkg "github.com/souravsspace/texly.chat/internal/repo/message"
@@ -27,6 +29,10 @@ import (
 	userRepoPkg "github.com/souravsspace/texly.chat/internal/repo/user"
 	vectorRepoPkg "github.com/souravsspace/texly.chat/internal/repo/vector"
 	"github.com/souravsspace/texly.chat/internal/services/analytics"
+	billing "github.com/souravsspace/texly.chat/internal/services/billing/core"
+	credits "github.com/souravsspace/texly.chat/internal/services/billing/credits"
+	polar "github.com/souravsspace/texly.chat/internal/services/billing/polar"
+	usage "github.com/souravsspace/texly.chat/internal/services/billing/usage"
 	"github.com/souravsspace/texly.chat/internal/services/cache"
 	"github.com/souravsspace/texly.chat/internal/services/chat"
 	"github.com/souravsspace/texly.chat/internal/services/embedding"
@@ -75,6 +81,17 @@ func (s *Server) Run() error {
 	 */
 	redisClient := db.GetRedisClient()
 	cacheService := cache.NewCacheService(redisClient)
+
+	/*
+	* Billing Services
+	 */
+	// Core usage tracking
+	usageService := usage.NewUsageService(s.db)
+	
+	// Supporting services for billing cycle management
+	creditsService := credits.NewCreditsService(s.db)
+	polarService := polar.NewPolarService(s.cfg)
+	billingCycleService := billing.NewBillingCycleService(s.db, creditsService, polarService)
 
 	/*
 	* Repositories
@@ -139,10 +156,13 @@ func (s *Server) Run() error {
 		fmt.Println("⚠️  OpenAI API key not configured - vector embeddings and chat disabled")
 	}
 
-	workerInstance := worker.NewWorker(s.db, embeddingService, vectorRepo, storageService, sourceRepo)
+	workerInstance := worker.NewWorker(s.db, embeddingService, vectorRepo, storageService, sourceRepo, botRepo, usageService)
 
 	// Start worker pool
 	jobQueue.Start(ctx, workerInstance.ProcessScrapeJob)
+
+	// Start daily billing worker
+	go worker.StartDailyBillingJob(ctx, billingCycleService)
 	fmt.Println("✅ Worker pool started")
 
 	// Setup graceful shutdown
@@ -162,7 +182,7 @@ func (s *Server) Run() error {
 	authHandler := auth.NewAuthHandler(userRepo, s.cfg)
 	googleHandler := auth.NewGoogleHandler(oauthService, oauthStateService, s.cfg)
 	userHandler := userHandlerPkg.NewUserHandler(userRepo)
-	sourceHandler := sourceHandlerPkg.NewSourceHandler(sourceRepo, botRepo, jobQueue, storageService, s.cfg.MaxUploadSizeMB)
+	sourceHandler := sourceHandlerPkg.NewSourceHandler(sourceRepo, botRepo, jobQueue, storageService, usageService, s.cfg.MaxUploadSizeMB)
 	analyticsService := analytics.NewAnalyticsService(messageRepo)
 	analyticsHandler := analyticsHandlerPkg.NewAnalyticsHandler(analyticsService)
 
@@ -175,17 +195,20 @@ func (s *Server) Run() error {
 	* Middleware
 	 */
 	if os.Getenv("ENVIRONMENT") == "development" {
-		s.engine.Use(middleware.CORS())
+		s.engine.Use(corsMiddleware.CORS())
 	}
 
 	// Initialize rate limiter
-	rateLimiter, err := middleware.NewRateLimiter(s.cfg, s.db)
+	rateLimiter, err := rateLimitMiddleware.NewRateLimiter(s.cfg, s.db)
 	if err != nil {
 		fmt.Printf("⚠️  Failed to initialize rate limiter: %v\n", err)
 		fmt.Println("⚠️  Continuing without rate limiting")
 	} else {
 		fmt.Println("✅ Rate limiter initialized")
 	}
+
+	// Initialize entitlement middleware
+	entitlementMiddleware := middleware.NewEntitlementMiddleware(s.db)
 
 	/*
 	* Routes
@@ -215,7 +238,7 @@ func (s *Server) Run() error {
 		* Bot routes
 		 */
 		botHandler := botHandlerPkg.NewBotHandler(botRepo)
-		apiGroup.POST("/bots", authMiddleware.Auth(s.cfg), botHandler.CreateBot)
+		apiGroup.POST("/bots", authMiddleware.Auth(s.cfg), entitlementMiddleware.EnforceLimit(middleware.LimitBotCreation), botHandler.CreateBot)
 		apiGroup.GET("/bots", authMiddleware.Auth(s.cfg), botHandler.ListBots)
 		apiGroup.GET("/bots/:id", authMiddleware.Auth(s.cfg), botHandler.GetBot)
 		apiGroup.PUT("/bots/:id", authMiddleware.Auth(s.cfg), botHandler.UpdateBot)
@@ -224,10 +247,10 @@ func (s *Server) Run() error {
 		/*
 		* Source routes (nested under bots)
 		 */
-		apiGroup.POST("/bots/:id/sources", authMiddleware.Auth(s.cfg), sourceHandler.CreateSource)                // URL source
-		apiGroup.POST("/bots/:id/sources/upload", authMiddleware.Auth(s.cfg), sourceHandler.UploadFileSource)     // File upload
-		apiGroup.POST("/bots/:id/sources/text", authMiddleware.Auth(s.cfg), sourceHandler.CreateTextSource)       // Text source
-		apiGroup.POST("/bots/:id/sources/sitemap", authMiddleware.Auth(s.cfg), sourceHandler.CreateSitemapSource) // Sitemap crawl
+		apiGroup.POST("/bots/:id/sources", authMiddleware.Auth(s.cfg), entitlementMiddleware.EnforceLimit(middleware.LimitSourceCreation), sourceHandler.CreateSource)                // URL source
+		apiGroup.POST("/bots/:id/sources/upload", authMiddleware.Auth(s.cfg), entitlementMiddleware.EnforceLimit(middleware.LimitStorage), sourceHandler.UploadFileSource)        // File upload - enforcing storage limit (placeholder)
+		apiGroup.POST("/bots/:id/sources/text", authMiddleware.Auth(s.cfg), entitlementMiddleware.EnforceLimit(middleware.LimitSourceCreation), sourceHandler.CreateTextSource)       // Text source
+		apiGroup.POST("/bots/:id/sources/sitemap", authMiddleware.Auth(s.cfg), entitlementMiddleware.EnforceLimit(middleware.LimitSourceCreation), sourceHandler.CreateSitemapSource) // Sitemap crawl
 		apiGroup.GET("/bots/:id/sources", authMiddleware.Auth(s.cfg), sourceHandler.ListSources)
 		apiGroup.GET("/bots/:id/sources/:sourceId", authMiddleware.Auth(s.cfg), sourceHandler.GetSource)
 		apiGroup.DELETE("/bots/:id/sources/:sourceId", authMiddleware.Auth(s.cfg), sourceHandler.DeleteSource)
@@ -235,8 +258,8 @@ func (s *Server) Run() error {
 		/*
 		* Chat routes
 		 */
-		chatHandler := chatHandlerPkg.NewChatHandler(botRepo, chatService)
-		apiGroup.POST("/bots/:id/chat", authMiddleware.Auth(s.cfg), chatHandler.StreamChat)
+		chatHandler := chatHandlerPkg.NewChatHandler(botRepo, chatService, usageService)
+		apiGroup.POST("/bots/:id/chat", authMiddleware.Auth(s.cfg), entitlementMiddleware.EnforceLimit(middleware.LimitMessageSend), chatHandler.StreamChat)
 
 		/*
 		* Analytics routes
@@ -254,7 +277,7 @@ func (s *Server) Run() error {
 	publicHandler := publicHandlerPkg.NewPublicHandler(botRepo, sessionService, chatService)
 
 	publicGroup := s.engine.Group("/api/public")
-	publicGroup.Use(middleware.WidgetCORS(botRepo))
+	publicGroup.Use(corsMiddleware.WidgetCORS(botRepo))
 	// Apply rate limiting to public endpoints
 	if rateLimiter != nil {
 		publicGroup.Use(rateLimiter.PublicRateLimitMiddleware())

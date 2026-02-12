@@ -2,10 +2,13 @@ package scraper
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
 	"github.com/gocolly/colly/v2"
+
+	sitemap "github.com/souravsspace/texly.chat/internal/services/sitemap"
 )
 
 /*
@@ -134,4 +137,68 @@ func cleanWhitespace(text string) string {
 	}
 
 	return strings.Join(cleaned, "\n")
+}
+
+/*
+ * ScanLinks scans a URL for internal links
+ */
+func (s *ScraperService) ScanLinks(startURL string) ([]string, error) {
+	var links []string
+	visited := make(map[string]bool)
+
+	// Parse start URL to get domain
+	parsedStartURL, err := url.Parse(startURL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid start URL: %w", err)
+	}
+	host := parsedStartURL.Host
+
+	// Create a new collector instance for this request
+	c := s.collector.Clone()
+
+	// Extract links
+	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
+		link := e.Attr("href")
+		// Resolve relative URLs
+		absoluteURL := e.Request.AbsoluteURL(link)
+
+		if absoluteURL == "" {
+			return
+		}
+
+		// Parse absolute URL
+		parsedLink, err := url.Parse(absoluteURL)
+		if err != nil {
+			return
+		}
+
+		// Only include links from the same domain
+		if parsedLink.Host == host {
+			// Remove fragment and query
+			parsedLink.Fragment = ""
+			parsedLink.RawQuery = ""
+			cleanLink := parsedLink.String()
+
+			if !visited[cleanLink] {
+				visited[cleanLink] = true
+				links = append(links, cleanLink)
+			}
+		}
+	})
+
+	// Handle errors
+	c.OnError(func(r *colly.Response, err error) {
+		fmt.Printf("Error visiting %s: %v\n", r.Request.URL, err)
+	})
+
+	// Visit the URL
+	if err := c.Visit(startURL); err != nil {
+		return nil, fmt.Errorf("failed to visit URL: %w", err)
+	}
+
+	// Wait for all requests to finish
+	c.Wait()
+
+	// Filter useful links
+	return sitemap.FilterURLs(links), nil
 }
