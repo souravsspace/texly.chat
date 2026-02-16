@@ -32,8 +32,6 @@ func TestCreditsService(t *testing.T) {
 		assert.Equal(t, 50.0, bal)
 	})
 
-
-
 	t.Run("RefreshMonthlyCredits", func(t *testing.T) {
 		// Set allocation to 20 (Pro default) or rely on existing logic
 		// Update user allocated credits
@@ -46,7 +44,7 @@ func TestCreditsService(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, 20.0, bal) // Should reset to 20
 	})
-	
+
 	// Cleanup
 	shared.TruncateTable(db, "users")
 }

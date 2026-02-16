@@ -10,11 +10,14 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PricingIndexRouteImport } from './routes/pricing/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settings'
 import { Route as AuthSignupRouteImport } from './routes/_auth/signup'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as DashboardBotsBotIdRouteImport } from './routes/dashboard/bots/$botId'
+import { Route as DashboardBillingUsageRouteImport } from './routes/dashboard/billing/usage'
+import { Route as DashboardBillingSubscriptionRouteImport } from './routes/dashboard/billing/subscription'
 import { Route as AuthAuthCallbackRouteImport } from './routes/_auth/auth.callback'
 import { Route as DashboardBotsBotIdWidgetRouteImport } from './routes/dashboard/bots/$botId/widget'
 import { Route as DashboardBotsBotIdConfigureRouteImport } from './routes/dashboard/bots/$botId/configure'
@@ -24,6 +27,11 @@ import { Route as DashboardBotsBotIdAnalyticsRouteImport } from './routes/dashbo
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingIndexRoute = PricingIndexRouteImport.update({
+  id: '/pricing/',
+  path: '/pricing/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
@@ -51,6 +59,17 @@ const DashboardBotsBotIdRoute = DashboardBotsBotIdRouteImport.update({
   path: '/dashboard/bots/$botId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardBillingUsageRoute = DashboardBillingUsageRouteImport.update({
+  id: '/dashboard/billing/usage',
+  path: '/dashboard/billing/usage',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardBillingSubscriptionRoute =
+  DashboardBillingSubscriptionRouteImport.update({
+    id: '/dashboard/billing/subscription',
+    path: '/dashboard/billing/subscription',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthAuthCallbackRoute = AuthAuthCallbackRouteImport.update({
   id: '/_auth/auth/callback',
   path: '/auth/callback',
@@ -86,7 +105,10 @@ export interface FileRoutesByFullPath {
   '/signup': typeof AuthSignupRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/pricing/': typeof PricingIndexRoute
   '/auth/callback': typeof AuthAuthCallbackRoute
+  '/dashboard/billing/subscription': typeof DashboardBillingSubscriptionRoute
+  '/dashboard/billing/usage': typeof DashboardBillingUsageRoute
   '/dashboard/bots/$botId': typeof DashboardBotsBotIdRouteWithChildren
   '/dashboard/bots/$botId/analytics': typeof DashboardBotsBotIdAnalyticsRoute
   '/dashboard/bots/$botId/chat': typeof DashboardBotsBotIdChatRoute
@@ -99,7 +121,10 @@ export interface FileRoutesByTo {
   '/signup': typeof AuthSignupRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/pricing': typeof PricingIndexRoute
   '/auth/callback': typeof AuthAuthCallbackRoute
+  '/dashboard/billing/subscription': typeof DashboardBillingSubscriptionRoute
+  '/dashboard/billing/usage': typeof DashboardBillingUsageRoute
   '/dashboard/bots/$botId': typeof DashboardBotsBotIdRouteWithChildren
   '/dashboard/bots/$botId/analytics': typeof DashboardBotsBotIdAnalyticsRoute
   '/dashboard/bots/$botId/chat': typeof DashboardBotsBotIdChatRoute
@@ -113,7 +138,10 @@ export interface FileRoutesById {
   '/_auth/signup': typeof AuthSignupRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/pricing/': typeof PricingIndexRoute
   '/_auth/auth/callback': typeof AuthAuthCallbackRoute
+  '/dashboard/billing/subscription': typeof DashboardBillingSubscriptionRoute
+  '/dashboard/billing/usage': typeof DashboardBillingUsageRoute
   '/dashboard/bots/$botId': typeof DashboardBotsBotIdRouteWithChildren
   '/dashboard/bots/$botId/analytics': typeof DashboardBotsBotIdAnalyticsRoute
   '/dashboard/bots/$botId/chat': typeof DashboardBotsBotIdChatRoute
@@ -128,7 +156,10 @@ export interface FileRouteTypes {
     | '/signup'
     | '/dashboard/settings'
     | '/dashboard/'
+    | '/pricing/'
     | '/auth/callback'
+    | '/dashboard/billing/subscription'
+    | '/dashboard/billing/usage'
     | '/dashboard/bots/$botId'
     | '/dashboard/bots/$botId/analytics'
     | '/dashboard/bots/$botId/chat'
@@ -141,7 +172,10 @@ export interface FileRouteTypes {
     | '/signup'
     | '/dashboard/settings'
     | '/dashboard'
+    | '/pricing'
     | '/auth/callback'
+    | '/dashboard/billing/subscription'
+    | '/dashboard/billing/usage'
     | '/dashboard/bots/$botId'
     | '/dashboard/bots/$botId/analytics'
     | '/dashboard/bots/$botId/chat'
@@ -154,7 +188,10 @@ export interface FileRouteTypes {
     | '/_auth/signup'
     | '/dashboard/settings'
     | '/dashboard/'
+    | '/pricing/'
     | '/_auth/auth/callback'
+    | '/dashboard/billing/subscription'
+    | '/dashboard/billing/usage'
     | '/dashboard/bots/$botId'
     | '/dashboard/bots/$botId/analytics'
     | '/dashboard/bots/$botId/chat'
@@ -168,7 +205,10 @@ export interface RootRouteChildren {
   AuthSignupRoute: typeof AuthSignupRoute
   DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
+  PricingIndexRoute: typeof PricingIndexRoute
   AuthAuthCallbackRoute: typeof AuthAuthCallbackRoute
+  DashboardBillingSubscriptionRoute: typeof DashboardBillingSubscriptionRoute
+  DashboardBillingUsageRoute: typeof DashboardBillingUsageRoute
   DashboardBotsBotIdRoute: typeof DashboardBotsBotIdRouteWithChildren
 }
 
@@ -179,6 +219,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing/': {
+      id: '/pricing/'
+      path: '/pricing'
+      fullPath: '/pricing/'
+      preLoaderRoute: typeof PricingIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/': {
@@ -214,6 +261,20 @@ declare module '@tanstack/react-router' {
       path: '/dashboard/bots/$botId'
       fullPath: '/dashboard/bots/$botId'
       preLoaderRoute: typeof DashboardBotsBotIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/billing/usage': {
+      id: '/dashboard/billing/usage'
+      path: '/dashboard/billing/usage'
+      fullPath: '/dashboard/billing/usage'
+      preLoaderRoute: typeof DashboardBillingUsageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/billing/subscription': {
+      id: '/dashboard/billing/subscription'
+      path: '/dashboard/billing/subscription'
+      fullPath: '/dashboard/billing/subscription'
+      preLoaderRoute: typeof DashboardBillingSubscriptionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth/auth/callback': {
@@ -277,7 +338,10 @@ const rootRouteChildren: RootRouteChildren = {
   AuthSignupRoute: AuthSignupRoute,
   DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
+  PricingIndexRoute: PricingIndexRoute,
   AuthAuthCallbackRoute: AuthAuthCallbackRoute,
+  DashboardBillingSubscriptionRoute: DashboardBillingSubscriptionRoute,
+  DashboardBillingUsageRoute: DashboardBillingUsageRoute,
   DashboardBotsBotIdRoute: DashboardBotsBotIdRouteWithChildren,
 }
 export const routeTree = rootRouteImport

@@ -12,6 +12,7 @@ import (
 	"github.com/souravsspace/texly.chat/internal/db"
 	analyticsHandlerPkg "github.com/souravsspace/texly.chat/internal/handlers/analytics"
 	"github.com/souravsspace/texly.chat/internal/handlers/auth"
+	billingHandlerPkg "github.com/souravsspace/texly.chat/internal/handlers/billing"
 	botHandlerPkg "github.com/souravsspace/texly.chat/internal/handlers/bot"
 	chatHandlerPkg "github.com/souravsspace/texly.chat/internal/handlers/chat"
 	healthHandlerPkg "github.com/souravsspace/texly.chat/internal/handlers/health"
@@ -87,7 +88,7 @@ func (s *Server) Run() error {
 	 */
 	// Core usage tracking
 	usageService := usage.NewUsageService(s.db)
-	
+
 	// Supporting services for billing cycle management
 	creditsService := credits.NewCreditsService(s.db)
 	polarService := polar.NewPolarService(s.cfg)
@@ -187,6 +188,12 @@ func (s *Server) Run() error {
 	analyticsHandler := analyticsHandlerPkg.NewAnalyticsHandler(analyticsService)
 
 	/*
+	* Billing Handlers
+	 */
+	checkoutHandler := billingHandlerPkg.NewCheckoutHandler(polarService, usageService)
+	webhookHandler := billingHandlerPkg.NewWebhookHandler(s.db, s.cfg, creditsService, polarService)
+
+	/*
 	* Health Endpoints
 	 */
 	healthHandler := healthHandlerPkg.NewHealthHandler(s.db, redisClient)
@@ -248,7 +255,7 @@ func (s *Server) Run() error {
 		* Source routes (nested under bots)
 		 */
 		apiGroup.POST("/bots/:id/sources", authMiddleware.Auth(s.cfg), entitlementMiddleware.EnforceLimit(middleware.LimitSourceCreation), sourceHandler.CreateSource)                // URL source
-		apiGroup.POST("/bots/:id/sources/upload", authMiddleware.Auth(s.cfg), entitlementMiddleware.EnforceLimit(middleware.LimitStorage), sourceHandler.UploadFileSource)        // File upload - enforcing storage limit (placeholder)
+		apiGroup.POST("/bots/:id/sources/upload", authMiddleware.Auth(s.cfg), entitlementMiddleware.EnforceLimit(middleware.LimitStorage), sourceHandler.UploadFileSource)            // File upload - enforcing storage limit (placeholder)
 		apiGroup.POST("/bots/:id/sources/text", authMiddleware.Auth(s.cfg), entitlementMiddleware.EnforceLimit(middleware.LimitSourceCreation), sourceHandler.CreateTextSource)       // Text source
 		apiGroup.POST("/bots/:id/sources/sitemap", authMiddleware.Auth(s.cfg), entitlementMiddleware.EnforceLimit(middleware.LimitSourceCreation), sourceHandler.CreateSitemapSource) // Sitemap crawl
 		apiGroup.GET("/bots/:id/sources", authMiddleware.Auth(s.cfg), sourceHandler.ListSources)
@@ -268,6 +275,16 @@ func (s *Server) Run() error {
 		apiGroup.GET("/analytics/bots/:id/daily", authMiddleware.Auth(s.cfg), analyticsHandler.GetBotDailyStats)
 		apiGroup.GET("/analytics/user", authMiddleware.Auth(s.cfg), analyticsHandler.GetUserAnalytics)
 		apiGroup.GET("/analytics/sessions/:id/messages", authMiddleware.Auth(s.cfg), analyticsHandler.GetSessionMessages)
+
+		/*
+		* Billing routes
+		 */
+		apiGroup.POST("/billing/checkout", authMiddleware.Auth(s.cfg), checkoutHandler.CreateCheckoutSession)
+		apiGroup.GET("/billing/portal", authMiddleware.Auth(s.cfg), checkoutHandler.CreatePortalSession)
+		apiGroup.GET("/billing/usage", authMiddleware.Auth(s.cfg), checkoutHandler.GetUsage)
+		apiGroup.POST("/billing/pay-usage", authMiddleware.Auth(s.cfg), checkoutHandler.PayUsage)
+		// Webhook (no auth middleware, signature verified in handler)
+		apiGroup.POST("/billing/webhook", webhookHandler.HandleWebhook)
 	}
 
 	/*

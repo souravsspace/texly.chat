@@ -1,136 +1,149 @@
 package polar
 
 import (
-	"bytes"
-	"encoding/json"
+	"context"
 	"fmt"
-	"io"
-	"net/http"
 
+	polargo "github.com/polarsource/polar-go"
+	"github.com/polarsource/polar-go/models/components"
+	"github.com/polarsource/polar-go/models/operations"
 	"github.com/souravsspace/texly.chat/configs"
+	"github.com/souravsspace/texly.chat/internal/models"
 )
 
 type PolarService struct {
+	client *polargo.Polar
 	config configs.Config
-	client *http.Client
 }
 
-func NewPolarService(cfg configs.Config) *PolarService {
+func NewPolarService(cfg configs.Config, opts ...polargo.SDKOption) *PolarService {
+	// Initialize Polar client with access token
+	options := []polargo.SDKOption{
+		polargo.WithSecurity(cfg.PolarAccessToken),
+		polargo.WithServerURL(cfg.PolarServerURL),
+	}
+	options = append(options, opts...)
+
+	client := polargo.New(options...)
+
 	return &PolarService{
+		client: client,
 		config: cfg,
-		client: &http.Client{},
 	}
 }
 
-// CheckoutRequest payload for creating a session
-type CheckoutRequest struct {
-	ProductPriceID string            `json:"product_price_id"`
-	SuccessURL     string            `json:"success_url"`
-	CustomerEmail  string            `json:"customer_email,omitempty"`
-	Metadata       map[string]string `json:"metadata,omitempty"`
-}
-
-// CheckoutResponse payload from Polar
-type CheckoutResponse struct {
-	URL string `json:"url"`
-}
-
-// CreateCheckoutSession generates a Polar checkout URL
+// CreateCheckoutSession generates a Polar checkout URL for a Pro subscription
 func (s *PolarService) CreateCheckoutSession(userID, userEmail string) (string, error) {
-	// 1. Get Product Price ID from config (using Product ID for now as placeholder, 
-	// ideally should be Price ID if distinct, but let's assume Product ID maps to a default price or we configure Price ID)
-	// NOTE: The Polar API `product_price_id` is required. We'll assume the config `PolarProProductID` holds the Price ID 
-	// or we need to fetch products to find the price ID. For simplicity, let's assume the config has the correct ID.
-	priceID := s.config.PolarProProductID 
+	ctx := context.Background()
 
-	reqBody := CheckoutRequest{
-		ProductPriceID: priceID,
-		SuccessURL:     s.config.FrontendURL + "/dashboard?checkout=success",
-		CustomerEmail:  userEmail,
-		Metadata: map[string]string{
-			"user_id": userID,
+	// Create checkout session
+	// We use the PolarProProductID from config.
+	// We pass user_id in metadata to link the subscription back to the user in webhooks.
+	req := components.CheckoutCreate{
+		Products:      []string{s.config.PolarProProductID},
+		SuccessURL:    polargo.String(s.config.FrontendURL + "/dashboard/billing?success=true"),
+		CustomerEmail: polargo.String(userEmail),
+		Metadata: map[string]components.CheckoutCreateMetadata{
+			"user_id": components.CreateCheckoutCreateMetadataStr(userID),
 		},
 	}
 
-	jsonData, err := json.Marshal(reqBody)
+	resp, err := s.client.Checkouts.Create(ctx, req)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to create checkout session: %w", err)
 	}
 
-	req, err := http.NewRequest("POST", s.config.PolarServerURL+"/v1/checkouts/custom/", bytes.NewBuffer(jsonData))
-	if err != nil {
-		return "", err
+	if resp.Checkout == nil {
+		return "", fmt.Errorf("checkout response is empty")
 	}
 
-	req.Header.Set("Authorization", "Bearer "+s.config.PolarAccessToken)
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := s.client.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= 400 {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("polar api error: %s", string(bodyBytes))
-	}
-
-	var result CheckoutResponse
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return "", err
-	}
-
-	return result.URL, nil
-}
-
-// CustomerPortalSessionRequest payload
-type CustomerPortalSessionRequest struct {
-	CustomerID string `json:"customer_id"`
-}
-
-// CustomerPortalSessionResponse payload
-type CustomerPortalSessionResponse struct {
-	URL string `json:"url"`
+	return resp.Checkout.URL, nil
 }
 
 // CreateCustomerPortalSession generates a link to manage subscription
 func (s *PolarService) CreateCustomerPortalSession(polarCustomerID string) (string, error) {
-	// Note: Polar might not have a direct "create portal session" endpoint like Stripe 
-	// depending on the version. Checking docs, it usually manages via Dashboard or specific endpoints.
-	// If unavailable, we might just link to the generic customer portal or send an email.
-	// For now, let's assume a standard portal flow or return a placeholder if not yet supported by API v1.
-	
-	// Placeholder: Polar currently manages this via magic links or user dashboard.
-	// We'll treat this as "TODO" or check if there's a specific endpoint.
-	// Based on docs, managing subscriptions is often done via the initial checkout or email links.
-	// We'll return the general Polar dashboard URL for now or a specific deep link if known.
-	return "https://polar.sh/purchases", nil 
+	ctx := context.Background()
+
+	// Use CustomerSessions to create a portal session
+	// The SDK uses a union type for the request body, we must use the specific constructor.
+	req := operations.CreateCustomerSessionsCreateCustomerSessionCreateCustomerSessionCustomerIDCreate(
+		components.CustomerSessionCustomerIDCreate{
+			CustomerID: polarCustomerID,
+		},
+	)
+
+	resp, err := s.client.CustomerSessions.Create(ctx, req)
+	if err != nil {
+		return "", fmt.Errorf("failed to create customer portal session: %w", err)
+	}
+
+	if resp.CustomerSession == nil {
+		return "", fmt.Errorf("customer session response is empty")
+	}
+
+	return "https://polar.sh/portal/" + resp.CustomerSession.Token, nil
 }
 
-// CreateUsageInvoice creates an invoice for usage overage
-func (s *PolarService) CreateUsageInvoice(userID string, amount float64) error {
-	// Placeholder. In production, call Polar API or Stripe usage-based billing endpoint.
-	// For MVP, we just log it. Real implementation would likely create a one-off charge or add to subscription.
-	fmt.Printf("[PolarService] Creating usage invoice for User %s: $%.2f\n", userID, amount)
-	return nil
-}
+// CreateUsageInvoice creates a usage invoice (if applicable in this flow)
+// For Polar, we trigger a checkout session for the specific amount/product to "top up" or pay.
+func (s *PolarService) CreateUsageInvoice(userID string, amount float64) (string, error) {
+	ctx := context.Background()
 
-// Subscription represents a localized view of a subscription
-type Subscription struct {
-	ID     string `json:"id"`
-	Status string `json:"status"`
+	// Assuming we have a "Top Up" product ID in config or we use the Pro one as fallback for now.
+	productID := s.config.PolarCreditsProductID
+	if productID == "" {
+		productID = s.config.PolarProProductID
+	}
+
+	req := components.CheckoutCreate{
+		Products:   []string{productID}, // specific product for credits
+		SuccessURL: polargo.String(s.config.FrontendURL + "/dashboard/billing?success=true&type=usage"),
+		Metadata: map[string]components.CheckoutCreateMetadata{
+			"user_id": components.CreateCheckoutCreateMetadataStr(userID),
+			"type":    components.CreateCheckoutCreateMetadataStr("usage_charge"),
+			"amount":  components.CreateCheckoutCreateMetadataStr(fmt.Sprintf("%.2f", amount)),
+		},
+	}
+
+	resp, err := s.client.Checkouts.Create(ctx, req)
+	if err != nil {
+		return "", fmt.Errorf("failed to create usage checkout: %w", err)
+	}
+
+	if resp.Checkout == nil {
+		return "", fmt.Errorf("checkout response is empty")
+	}
+
+	return resp.Checkout.URL, nil
 }
 
 // GetSubscription fetches subscription details
-func (s *PolarService) GetSubscription(subscriptionID string) (*Subscription, error) {
-	// Placeholder
-	return &Subscription{ID: subscriptionID, Status: "active"}, nil
+func (s *PolarService) GetSubscription(subscriptionID string) (*models.Subscription, error) {
+	ctx := context.Background()
+
+	resp, err := s.client.Subscriptions.Get(ctx, subscriptionID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get subscription: %w", err)
+	}
+
+	if resp.Subscription == nil {
+		return nil, fmt.Errorf("subscription not found or empty response")
+	}
+
+	return &models.Subscription{
+		ID:     resp.Subscription.ID,
+		Status: string(resp.Subscription.Status),
+	}, nil
 }
 
-// CancelSubscription cancels a subscription at period end
+// CancelSubscription cancels a subscription
 func (s *PolarService) CancelSubscription(subscriptionID string) error {
-	// Placeholder
-	fmt.Printf("[PolarService] Cancelling subscription %s\n", subscriptionID)
+	ctx := context.Background()
+
+	// Use Revoke for immediate cancellation
+	_, err := s.client.Subscriptions.Revoke(ctx, subscriptionID)
+	if err != nil {
+		return fmt.Errorf("failed to cancel subscription: %w", err)
+	}
 	return nil
 }

@@ -15,19 +15,19 @@ import (
 
 func TestEntitlementMiddleware(t *testing.T) {
 	db := shared.SetupTestDB()
-	
+
 	// Setup user helper
 	setupUser := func(id, tier string) {
 		shared.TruncateTable(db, "users")
 		shared.TruncateTable(db, "bots")
 		shared.TruncateTable(db, "usage_records")
-		
+
 		db.Exec("INSERT INTO users (id, email, tier) VALUES (?, ?, ?)", id, "mid@example.com", tier)
 	}
 
 	// Create test engine
 	r := gin.New()
-	
+
 	// Mock Auth Middleware to inject user
 	mockAuth := func(userID string) gin.HandlerFunc {
 		return func(c *gin.Context) {
@@ -47,7 +47,7 @@ func TestEntitlementMiddleware(t *testing.T) {
 	t.Run("BotCreationLimit_Free_Exceeded", func(t *testing.T) {
 		userID := "user_free_bot"
 		setupUser(userID, "free")
-		
+
 		// Create 1 bot (Limit is 1 for Free)
 		db.Exec("INSERT INTO bots (id, user_id, name) VALUES (?, ?, ?)", "bot1", userID, "Bot 1")
 
@@ -67,7 +67,7 @@ func TestEntitlementMiddleware(t *testing.T) {
 	t.Run("BotCreationLimit_Pro_Allowed", func(t *testing.T) {
 		userID := "user_pro_bot"
 		setupUser(userID, "pro")
-		
+
 		// Create 3 bots (Pro limit 5)
 		for i := 0; i < 3; i++ {
 			db.Exec("INSERT INTO bots (id, user_id, name) VALUES (?, ?, ?)", string(rune(i)), userID, "Bot")
@@ -89,22 +89,22 @@ func TestEntitlementMiddleware(t *testing.T) {
 		setupUser(userID, "free")
 
 		// Insert 101 messages (Limit 100)
-		// UsageRecord counts monthly usage. 
+		// UsageRecord counts monthly usage.
 		// Middleware calls `getMonthlyMessages` which queries usage records.
 		// Note: implementation details matter. Does EnforceLimit count messages or check usage?
 		// "monthlyMessages := getMonthlyMessages(user.ID)"
-		
+
 		// Insert UsageRecord instead of standard messages if that's what it counts
 		// Logic check: EntitlementMiddleware usually iterates `usage_records` where event_type='chat_message'
 		currentMonth := time.Now()
 		for i := 0; i < 101; i++ {
 			db.Create(&models.UsageRecord{
-				UserID: userID,
-				Type: "chat_message",
+				UserID:    userID,
+				Type:      "chat_message",
 				CreatedAt: currentMonth,
 			})
 		}
-		
+
 		r.POST("/msg_free", mockAuth(userID), entitlementMw.EnforceLimit("message_send"), func(c *gin.Context) {
 			c.Status(200)
 		})

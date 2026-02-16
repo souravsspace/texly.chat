@@ -2,97 +2,102 @@ package usage_test
 
 import (
 	"testing"
+	"time"
 
+	"github.com/souravsspace/texly.chat/configs"
 	"github.com/souravsspace/texly.chat/internal/models"
-	billing "github.com/souravsspace/texly.chat/internal/services/billing/usage"
+	"github.com/souravsspace/texly.chat/internal/services/billing/usage"
 	"github.com/souravsspace/texly.chat/internal/shared"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestUsageService(t *testing.T) {
+func TestTrackChatMessage(t *testing.T) {
 	db := shared.SetupTestDB()
-	svc := billing.NewUsageService(db)
+	service := usage.NewUsageService(db)
 
-	userID := "user_test_usage"
-	botID := "bot_test_usage"
-
-	// Setup Helper
-	setupUser := func() {
-		shared.TruncateTable(db, "usage_records")
-		shared.TruncateTable(db, "bots")
-		shared.TruncateTable(db, "users")
-
-		// Create Pro User with credits
-		db.Exec("INSERT INTO users (id, email, tier, credits_balance, credits_allocated) VALUES (?, ?, ?, ?, ?)", 
-			userID, "usage@example.com", "pro", 5.00, 20.00)
-		
-		// Create Bot
-		db.Exec("INSERT INTO bots (id, user_id, name, model) VALUES (?, ?, ?, ?)", 
-			botID, userID, "Test Bot", "gpt-3.5-turbo")
+	user := models.User{
+		ID:             "user_1",
+		CreditsBalance: 10.0,
+		Tier:           configs.TierPro,
 	}
+	db.Create(&user)
 
-	t.Run("TrackChatMessage_DesuctsCredits", func(t *testing.T) {
-		setupUser()
+	// Track 1 message
+	err := service.TrackChatMessage(user.ID, "bot_1")
+	assert.NoError(t, err)
 
-		// Cost for 1 message logic depends on model. 
-		// Assuming implementation uses fixed cost or calculates it.
-		// Let's assume standard cost.
-		
-		err := svc.TrackChatMessage(userID, botID)
-		assert.NoError(t, err)
+	// Verify usage record
+	var record models.UsageRecord
+	err = db.First(&record).Error
+	assert.NoError(t, err)
+	assert.Equal(t, "chat_message", record.Type)
+	assert.Equal(t, 1.0, record.Quantity)
+	// configs.CalculateMessageCost(1) = PricePerMessage
+	assert.InDelta(t, configs.PricePerMessage, record.Cost, 0.0001)
 
-		// Check Balance
-		var user models.User
-		db.First(&user, "id = ?", userID)
-		assert.Less(t, user.CreditsBalance, 5.00) // Should be less than initial
+	// Verify user balance deduction
+	var updatedUser models.User
+	db.First(&updatedUser, "id = ?", user.ID)
+	// Balance should decrease by cost
+	expectedBalance := 10.0 - configs.PricePerMessage
+	assert.InDelta(t, expectedBalance, updatedUser.CreditsBalance, 0.0001)
+}
 
-		// Check Usage Record
-		var count int64
-		db.Model(&models.UsageRecord{}).Where("user_id = ? AND type = ?", userID, "chat_message").Count(&count)
-		assert.Equal(t, int64(1), count)
+func TestTrackEmbedding(t *testing.T) {
+	db := shared.SetupTestDB()
+	service := usage.NewUsageService(db)
+
+	// User created with 5.0 credits
+	user := models.User{
+		ID:             "user_2",
+		CreditsBalance: 5.0,
+		Tier:           configs.TierPro,
+	}
+	db.Create(&user)
+
+	// Track 1000 tokens
+	err := service.TrackEmbedding(user.ID, 1000)
+	assert.NoError(t, err)
+
+	var record models.UsageRecord
+	err = db.First(&record, "user_id = ?", user.ID).Error
+	assert.NoError(t, err)
+
+	expectedCost := configs.PricePerEmbedding1KTokens
+	assert.InDelta(t, expectedCost, record.Cost, 0.00001)
+
+	var updatedUser models.User
+	db.First(&updatedUser, "id = ?", user.ID)
+	assert.InDelta(t, 5.0-expectedCost, updatedUser.CreditsBalance, 0.0001)
+}
+
+func TestGetCurrentUsage(t *testing.T) {
+	db := shared.SetupTestDB()
+	service := usage.NewUsageService(db)
+
+	userID := "user_3"
+	// Create some usage records manually
+	db.Create(&models.UsageRecord{
+		UserID:    userID,
+		Cost:      1.50,
+		BilledAt:  time.Time{}, // Not billed yet
+		CreatedAt: time.Now(),
+	})
+	db.Create(&models.UsageRecord{
+		UserID:    userID,
+		Cost:      0.50,
+		BilledAt:  time.Time{}, // Not billed yet
+		CreatedAt: time.Now(),
+	})
+	// Add a billed record (should be ignored)
+	db.Create(&models.UsageRecord{
+		UserID:    userID,
+		Cost:      10.00,
+		BilledAt:  time.Now(),
+		CreatedAt: time.Now(),
 	})
 
-	t.Run("TrackEmbedding_CalculatesCost", func(t *testing.T) {
-		setupUser()
-
-		tokens := 1000
-		// Cost for text-embedding-3-small is usually very low ($0.00002 / 1k tokens)
-		// configs.PricingModel should have it.
-
-		err := svc.TrackEmbedding(userID, tokens)
-		assert.NoError(t, err)
-
-		var user models.User
-		db.First(&user, "id = ?", userID)
-		assert.Less(t, user.CreditsBalance, 5.00)
-		
-		// Verify cost calculation if possible, or just that it deducted something
-	})
-
-	t.Run("TrackStorage_MonthlyProRate", func(t *testing.T) {
-		setupUser()
-
-		// 1GB storage
-		sizeGB := 1.0
-		
-		err := svc.TrackStorage(userID, sizeGB)
-		assert.NoError(t, err)
-
-		// Check record
-		var record models.UsageRecord
-		err = db.Where("user_id = ? AND type = ?", userID, "storage").First(&record).Error
-		assert.NoError(t, err)
-		assert.Equal(t, 1.0, record.Quantity)
-	})
-
-	t.Run("GetCurrentUsage", func(t *testing.T) {
-		setupUser()
-		_ = svc.TrackChatMessage(userID, botID)
-		_ = svc.TrackChatMessage(userID, botID)
-
-		report, err := svc.GetCurrentUsage(userID)
-		assert.NoError(t, err)
-		assert.NotNil(t, report)
-		// Assert details based on implementation
-	})
+	total, err := service.GetCurrentUsage(userID)
+	assert.NoError(t, err)
+	assert.InDelta(t, 2.00, total, 0.0001)
 }

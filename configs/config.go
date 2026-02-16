@@ -42,11 +42,12 @@ type Config struct {
 	FrontendURL        string
 
 	// Polar Payment Configuration
-	PolarAccessToken    string
-	PolarWebhookSecret  string
-	PolarOrganizationID string
-	PolarProProductID   string
-	PolarServerURL      string
+	PolarAccessToken      string
+	PolarWebhookSecret    string
+	PolarOrganizationID   string
+	PolarProProductID     string
+	PolarCreditsProductID string
+	PolarServerURL        string
 }
 
 /*
@@ -59,35 +60,36 @@ func Load() Config {
 	}
 
 	return Config{
-		DatabaseURL:          getEnv("DATABASE_URL", true),
-		DatabaseMaxConns:     getEnvAsInt("DATABASE_MAX_CONNS", 25),
-		DatabaseMaxIdleConns: getEnvAsInt("DATABASE_MAX_IDLE_CONNS", 5),
-		Port:                 getEnv("PORT", false, "8080"),
-		JWTSecret:            getEnv("JWT_SECRET", true),
-		OpenAIAPIKey:         getEnv("OPENAI_API_KEY", true),
-		EmbeddingModel:       getEnv("EMBEDDING_MODEL", false, "text-embedding-3-small"),
-		EmbeddingDimension:   getEnvAsInt("EMBEDDING_DIMENSION", 1536),
-		ChatModel:            getEnv("OPENAI_CHAT_MODEL", false, "gpt-4o-mini"),
-		ChatTemperature:      getEnvAsFloat("CHAT_TEMPERATURE", 0.7),
-		MaxContextChunks:     getEnvAsInt("MAX_CONTEXT_CHUNKS", 5),
-		MinIOEndpoint:        getEnv("MINIO_ENDPOINT", true),
-		MinIOAccessKey:       getEnv("MINIO_ACCESS_KEY", true),
-		MinIOSecretKey:       getEnv("MINIO_SECRET_KEY", true),
-		MinIOBucket:          getEnv("MINIO_BUCKET", false, "texly-uploads"),
-		MinIOUseSSL:          getEnvAsBool("MINIO_USE_SSL", false),
-		MaxUploadSizeMB:      getEnvAsInt("MAX_UPLOAD_SIZE_MB", 100),
-		RedisURL:             getEnv("REDIS_URL", true),
-		RedisMaxConns:        getEnvAsInt("REDIS_MAX_CONNS", 50),
-		RedisMinIdleConns:    getEnvAsInt("REDIS_MIN_IDLE_CONNS", 10),
-		GoogleClientID:       getEnv("GOOGLE_CLIENT_ID", false),
-		GoogleClientSecret:   getEnv("GOOGLE_CLIENT_SECRET", false),
-		GoogleRedirectURL:    getEnv("GOOGLE_REDIRECT_URL", false),
-		FrontendURL:          getEnv("FRONTEND_URL", false, "http://localhost:5173"),
-		PolarAccessToken:     getEnv("POLAR_ACCESS_TOKEN", false),
-		PolarWebhookSecret:   getEnv("POLAR_WEBHOOK_SECRET", false),
-		PolarOrganizationID:  getEnv("POLAR_ORGANIZATION_ID", false),
-		PolarProProductID:    getEnv("POLAR_PRO_PRODUCT_ID", false),
-		PolarServerURL:       getEnv("POLAR_SERVER_URL", false, "https://api.polar.sh"),
+		DatabaseURL:           getEnv("DATABASE_URL", true),
+		DatabaseMaxConns:      getEnvAsInt("DATABASE_MAX_CONNS", 25),
+		DatabaseMaxIdleConns:  getEnvAsInt("DATABASE_MAX_IDLE_CONNS", 5),
+		Port:                  getEnv("PORT", false, "8080"),
+		JWTSecret:             getEnv("JWT_SECRET", true),
+		OpenAIAPIKey:          getEnv("OPENAI_API_KEY", true),
+		EmbeddingModel:        getEnv("EMBEDDING_MODEL", false, "text-embedding-3-small"),
+		EmbeddingDimension:    getEnvAsInt("EMBEDDING_DIMENSION", 1536),
+		ChatModel:             getEnv("OPENAI_CHAT_MODEL", false, "gpt-4o-mini"),
+		ChatTemperature:       getEnvAsFloat("CHAT_TEMPERATURE", 0.7),
+		MaxContextChunks:      getEnvAsInt("MAX_CONTEXT_CHUNKS", 5),
+		MinIOEndpoint:         getEnv("MINIO_ENDPOINT", true),
+		MinIOAccessKey:        getEnv("MINIO_ACCESS_KEY", true),
+		MinIOSecretKey:        getEnv("MINIO_SECRET_KEY", true),
+		MinIOBucket:           getEnv("MINIO_BUCKET", false, "texly-uploads"),
+		MinIOUseSSL:           getEnvAsBool("MINIO_USE_SSL", false),
+		MaxUploadSizeMB:       getEnvAsInt("MAX_UPLOAD_SIZE_MB", 100),
+		RedisURL:              getEnv("REDIS_URL", true),
+		RedisMaxConns:         getEnvAsInt("REDIS_MAX_CONNS", 50),
+		RedisMinIdleConns:     getEnvAsInt("REDIS_MIN_IDLE_CONNS", 10),
+		GoogleClientID:        getEnv("GOOGLE_CLIENT_ID", false),
+		GoogleClientSecret:    getEnv("GOOGLE_CLIENT_SECRET", false),
+		GoogleRedirectURL:     getEnv("GOOGLE_REDIRECT_URL", false),
+		FrontendURL:           getEnv("FRONTEND_URL", false, "http://localhost:5173"),
+		PolarAccessToken:      getEnv("POLAR_ACCESS_TOKEN", false),
+		PolarWebhookSecret:    getEnv("POLAR_WEBHOOK_SECRET", false),
+		PolarOrganizationID:   getEnv("POLAR_ORGANIZATION_ID", false),
+		PolarProProductID:     getEnv("POLAR_PRO_PRODUCT_ID", false),
+		PolarCreditsProductID: getEnv("POLAR_CREDITS_PRODUCT_ID", false),
+		PolarServerURL:        getEnv("POLAR_SERVER_URL", false, "https://sandbox.polar.sh"),
 	}
 }
 

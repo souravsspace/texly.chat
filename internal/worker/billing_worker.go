@@ -28,7 +28,6 @@ func StartDailyBillingJob(ctx context.Context, billingSvc *billing.BillingCycleS
 	// Note: Ticker might drift, for strict cron use a cron library.
 	// For MVP, this is sufficient.
 
-
 	// Wait for the first run at midnight
 	select {
 	case <-ctx.Done():

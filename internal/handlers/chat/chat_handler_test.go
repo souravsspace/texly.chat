@@ -73,13 +73,13 @@ func TestChatHandler_StreamChat(t *testing.T) {
 
 	// Services
 	usageSvc := usage.NewUsageService(db)
-	
+
 	embSvc := embedding.NewEmbeddingService("test-key", "text-embedding-3-small", 1536)
 	embSvc.SetBaseURL(openAIServer.URL)
-	
+
 	// Create Vector Service using real repo and mocked embedding service
 	searchSvc := vector.NewSearchService(db, repoVec, embSvc)
-	
+
 	// Create Chat Service with mocked BaseURL
 	chatService := chatSvc.NewChatService(
 		embSvc,
@@ -98,16 +98,16 @@ func TestChatHandler_StreamChat(t *testing.T) {
 	// Setup Data
 	userID := "user_chat_full"
 	botID := "bot_chat_full"
-	
+
 	shared.TruncateTable(db, "users")
 	shared.TruncateTable(db, "bots")
 	shared.TruncateTable(db, "usage_records")
-	
+
 	// Setup Data
 	user := &models.User{
-		ID: userID,
-		Tier: "pro",
-		CreditsBalance: 20.0,
+		ID:               userID,
+		Tier:             "pro",
+		CreditsBalance:   20.0,
 		CreditsAllocated: 20.0,
 	}
 	if err := db.Create(user).Error; err != nil {
@@ -115,9 +115,9 @@ func TestChatHandler_StreamChat(t *testing.T) {
 	}
 
 	bot := &models.Bot{
-		ID: botID,
+		ID:     botID,
 		UserID: userID,
-		Name: "Test Bot",
+		Name:   "Test Bot",
 	}
 	if err := db.Create(bot).Error; err != nil {
 		t.Fatalf("Failed to create bot: %v", err)

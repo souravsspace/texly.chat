@@ -39,8 +39,6 @@ func (h *AuthHandler) Signup(c *gin.Context) {
 		return
 	}
 
-
-
 	existing, err := h.userRepo.GetByEmail(req.Email)
 	if err != nil {
 		log.Printf("Database error checking email: %v", err)
@@ -68,7 +66,6 @@ func (h *AuthHandler) Signup(c *gin.Context) {
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
-
 
 	if err := h.userRepo.Create(user); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to create user"})

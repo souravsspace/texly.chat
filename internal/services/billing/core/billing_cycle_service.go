@@ -76,9 +76,14 @@ func (s *BillingCycleService) processUserCycle(user *models.User) error {
 	// 2. Bill Overage if any
 	if overage > 0.01 { // Ignore tiny amounts
 		fmt.Printf("[BillingCycle] User %s has overage of $%.2f. Triggering invoice.\n", user.ID, overage)
-		if err := s.polarService.CreateUsageInvoice(user.ID, overage); err != nil {
+		invoiceURL, err := s.polarService.CreateUsageInvoice(user.ID, overage)
+		if err != nil {
 			return fmt.Errorf("failed to create invoice: %w", err)
 		}
+		// In a real automated system, we'd email this URL or auto-charge if payment method on file.
+		// For now, we just log it.
+		// TODO: Send email notification with invoiceURL
+		fmt.Printf("[BillingCycle] Invoice created for user %s: %s\n", user.ID, invoiceURL)
 	}
 
 	// 3. Reset Credits for next month
@@ -89,7 +94,7 @@ func (s *BillingCycleService) processUserCycle(user *models.User) error {
 		tierLimits := configs.GetTierLimits(user.Tier)
 		user.CreditsAllocated = tierLimits.IncludedCredits
 	}
-	
+
 	// Reset balance to allocated amount
 	user.CreditsBalance = user.CreditsAllocated
 

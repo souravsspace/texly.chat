@@ -3,6 +3,14 @@
  */
 
 /*
+ * Subscription represents a localized view of a subscription
+ */
+export interface Subscription {
+  id: string;
+  status: string;
+}
+
+/*
  * WidgetConfig holds configuration for the embeddable widget
  */
 export interface WidgetConfig {

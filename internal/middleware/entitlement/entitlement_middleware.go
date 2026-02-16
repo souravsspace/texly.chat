@@ -41,7 +41,7 @@ func (m *EntitlementMiddleware) EnforceLimit(limitType string) gin.HandlerFunc {
 				return
 			}
 			userID := userIdCtx.(string)
-			
+
 			// Fetch user from DB
 			var dbUser models.User
 			if err := m.db.First(&dbUser, "id = ?", userID).Error; err != nil {
@@ -101,7 +101,7 @@ func (m *EntitlementMiddleware) EnforceLimit(limitType string) gin.HandlerFunc {
 				// But config says MaxSourcesPerBot.
 				// If no bot ID, skip or error?
 				// Assuming middleware is only used on routes with :id for sources
-				c.Next() 
+				c.Next()
 				return
 			}
 			var count int64
@@ -113,7 +113,7 @@ func (m *EntitlementMiddleware) EnforceLimit(limitType string) gin.HandlerFunc {
 				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": fmt.Sprintf("Source limit per bot reached (%d/%d). Upgrade to increase limits.", count, tierLimits.MaxSourcesPerBot)})
 				return
 			}
-		
+
 		case LimitStorage:
 			if tierLimits.MaxStorageGB == -1 {
 				c.Next()
@@ -132,7 +132,7 @@ func (m *EntitlementMiddleware) EnforceLimit(limitType string) gin.HandlerFunc {
 			// The config says "Max Storage (Total)".
 			// If we can't calculate total, we can't enforce properly.
 			// Temporary: Skip implementation or assume usage records track total active storage (unlikely).
-			// Let's assume we check "upload size" of the current request against remaining quota? 
+			// Let's assume we check "upload size" of the current request against remaining quota?
 			// We don't know the file size before upload in middleware easily (unless Content-Length).
 			// LET'S SKIP STORAGE ENFORCEMENT FOR NOW until Source model has Size.
 			c.Next()

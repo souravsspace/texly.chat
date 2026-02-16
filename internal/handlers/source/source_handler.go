@@ -471,7 +471,7 @@ func (h *SourceHandler) CreateSitemapSource(c *gin.Context) {
 	if err != nil || len(urls) == 0 {
 		// Fallback: If sitemap parsing fails or returns no URLs, try scanning the website directly
 		fmt.Printf("Sitemap parsing failed or empty (err=%v), falling back to crawling: %s\n", err, req.URL)
-		
+
 		scraperParams := scraper.NewScraperService()
 		scannedLinks, scanErr := scraperParams.ScanLinks(req.URL)
 		if scanErr != nil {
@@ -483,12 +483,12 @@ func (h *SourceHandler) CreateSitemapSource(c *gin.Context) {
 			}
 			return
 		}
-		
+
 		if len(scannedLinks) == 0 {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "No URLs found in sitemap or on the page"})
 			return
 		}
-		
+
 		urls = scannedLinks
 	}
 

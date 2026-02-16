@@ -80,14 +80,14 @@ const (
 // TierLimits defines the resource limits for a subscription tier.
 // A value of -1 means unlimited.
 type TierLimits struct {
-	Tier              string
-	MaxBots           int
-	MaxMessagesPerMo  int     // -1 = unlimited (pay-as-you-go)
-	MaxSourcesPerBot  int     // -1 = unlimited
-	MaxStorageGB      float64 // -1 = unlimited
-	MaxOriginsPerBot  int     // -1 = unlimited
-	IncludedCredits   float64 // monthly credit allocation in USD
-	IncludedBots      int     // bots included before extra-bot charges apply
+	Tier             string
+	MaxBots          int
+	MaxMessagesPerMo int     // -1 = unlimited (pay-as-you-go)
+	MaxSourcesPerBot int     // -1 = unlimited
+	MaxStorageGB     float64 // -1 = unlimited
+	MaxOriginsPerBot int     // -1 = unlimited
+	IncludedCredits  float64 // monthly credit allocation in USD
+	IncludedBots     int     // bots included before extra-bot charges apply
 }
 
 const (

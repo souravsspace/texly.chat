@@ -82,7 +82,7 @@ func (h *ChatHandler) StreamChat(c *gin.Context) {
 			// For now, log error and proceed, or block if strict
 			// Ideally we block if payment required
 			fmt.Printf("Error tracking chat usage: %v\n", err)
-			// If we want to block on insufficient funds (already handled in UsageService which returns error? 
+			// If we want to block on insufficient funds (already handled in UsageService which returns error?
 			// UsageService returns error if DB error. It updates balance but doesn't strictly block UNLESS logic added.
 			// Current UsageService implementation returns error only on DB failure.
 			// Pro tier logic: "Deduct from credits if available".

@@ -80,6 +80,8 @@ class ApiClient {
       const payload: CreateBotRequest = {
         name,
         system_prompt: system_prompt || "",
+        allowed_origins: [],
+        widget_config: null,
       };
       return this.request<Bot>("/bots", {
         method: "POST",
@@ -266,6 +268,21 @@ class ApiClient {
 
     getSessionMessages: (sessionId: string) =>
       this.request<Message[]>(`/analytics/sessions/${sessionId}/messages`),
+  };
+
+  billing = {
+    usage: () => this.request<User>("/billing/usage"),
+
+    checkout: (tier = "pro") =>
+      this.request<{ url: string }>("/billing/checkout", {
+        method: "POST",
+        body: JSON.stringify({ tier }),
+      }),
+
+    portal: () =>
+      this.request<{ url: string }>("/billing/portal", {
+        method: "POST",
+      }),
   };
 }
 

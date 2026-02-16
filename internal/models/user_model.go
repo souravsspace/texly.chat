@@ -6,13 +6,13 @@ import "time"
 * User represents a registered user in the system
  */
 type User struct {
-	ID           string    `json:"id" gorm:"primaryKey"`
-	Email        string    `json:"email" gorm:"unique;not null"`
-	PasswordHash string    `json:"-"` // Nullable for OAuth users, removed gorm:not null
-	Name         string    `json:"name"`
-	Avatar       string    `json:"avatar"`
-	GoogleID     *string   `json:"google_id" gorm:"unique"`
-	AuthProvider string    `json:"auth_provider" gorm:"default:'email'"` // email, google
+	ID           string  `json:"id" gorm:"primaryKey"`
+	Email        string  `json:"email" gorm:"unique;not null"`
+	PasswordHash string  `json:"-"` // Nullable for OAuth users, removed gorm:not null
+	Name         string  `json:"name"`
+	Avatar       string  `json:"avatar"`
+	GoogleID     *string `json:"google_id" gorm:"unique"`
+	AuthProvider string  `json:"auth_provider" gorm:"default:'email'"` // email, google
 
 	// Subscription fields
 	Tier               string    `json:"tier" gorm:"default:'free'"` // "free", "pro", "enterprise"
