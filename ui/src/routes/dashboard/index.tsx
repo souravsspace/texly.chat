@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { api } from "@/api";
 import { Header } from "@/components/layout/header";
+import { UpgradeModal } from "@/components/modals/upgrade-modal";
 import { Button } from "@/components/ui/button";
 import { useCreateBotDialog } from "@/hooks/use-create-bot-dialog";
 import { useConfirm } from "@/providers/alert-dialog";
@@ -57,6 +58,16 @@ function Dashboard() {
     }
   };
 
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+
+  const handleCreateBot = () => {
+    if (user?.tier === "free" && (bots?.length || 0) >= 1) {
+      setUpgradeModalOpen(true);
+    } else {
+      createBotDialog.onOpen();
+    }
+  };
+
   if (authLoading || (!user && botsLoading)) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -77,12 +88,16 @@ function Dashboard() {
 
       <div className="mb-6 flex items-center justify-between">
         <h2 className="font-bold text-2xl text-foreground">Your Chatbots</h2>
-        <Button onClick={createBotDialog.onOpen}>New Chatbot</Button>
+        <Button onClick={handleCreateBot}>New Chatbot</Button>
         <CreateBotDialog
           onOpenChange={(open) =>
             open ? createBotDialog.onOpen() : createBotDialog.onClose()
           }
           open={createBotDialog.isOpen}
+        />
+        <UpgradeModal
+          onOpenChange={setUpgradeModalOpen}
+          open={upgradeModalOpen}
         />
       </div>
 

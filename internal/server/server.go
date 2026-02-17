@@ -190,7 +190,7 @@ func (s *Server) Run() error {
 	/*
 	* Billing Handlers
 	 */
-	checkoutHandler := billingHandlerPkg.NewCheckoutHandler(polarService, usageService)
+	checkoutHandler := billingHandlerPkg.NewCheckoutHandler(polarService, usageService, userRepo)
 	webhookHandler := billingHandlerPkg.NewWebhookHandler(s.db, s.cfg, creditsService, polarService)
 
 	/*
