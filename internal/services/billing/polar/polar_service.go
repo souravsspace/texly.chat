@@ -36,6 +36,11 @@ func NewPolarService(cfg configs.Config, opts ...polargo.SDKOption) *PolarServic
 func (s *PolarService) CreateCheckoutSession(userID, userEmail string) (string, error) {
 	ctx := context.Background()
 
+	// Validate that the product ID is configured
+	if s.config.PolarProProductID == "" {
+		return "", fmt.Errorf("Polar Pro product ID is not configured. Please set POLAR_PRO_PRODUCT_ID in your environment variables")
+	}
+
 	// Create checkout session
 	// We use the PolarProProductID from config.
 	// We pass user_id in metadata to link the subscription back to the user in webhooks.
@@ -50,7 +55,7 @@ func (s *PolarService) CreateCheckoutSession(userID, userEmail string) (string, 
 
 	resp, err := s.client.Checkouts.Create(ctx, req)
 	if err != nil {
-		return "", fmt.Errorf("failed to create checkout session: %w", err)
+		return "", fmt.Errorf("failed to create checkout session (product may not exist in Polar): %w", err)
 	}
 
 	if resp.Checkout == nil {
@@ -81,7 +86,18 @@ func (s *PolarService) CreateCustomerPortalSession(polarCustomerID string) (stri
 		return "", fmt.Errorf("customer session response is empty")
 	}
 
-	return "https://polar.sh/portal/" + resp.CustomerSession.Token, nil
+	// Use the CustomerPortalURL provided by Polar API
+	// This URL is automatically generated with the correct environment (sandbox/production)
+	return resp.CustomerSession.CustomerPortalURL, nil
+}
+
+// isSandboxEnvironment checks if the current configuration is using sandbox
+func (s *PolarService) isSandboxEnvironment() bool {
+	// Check if the server URL contains "sandbox"
+	return s.config.PolarServerURL != "" &&
+		(s.config.PolarServerURL == "https://sandbox-api.polar.sh" ||
+			s.config.PolarServerURL == "sandbox-api.polar.sh" ||
+			s.config.PolarServerURL == "sandbox")
 }
 
 // CreateUsageInvoice creates a usage invoice (if applicable in this flow)

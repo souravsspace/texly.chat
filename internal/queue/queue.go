@@ -56,14 +56,20 @@ func NewInMemoryQueue(bufferSize, workerPool int) *InMemoryQueue {
 }
 
 /*
-* Enqueue adds a job to the queue
+ * Enqueue adds a job to the queue
  */
 func (q *InMemoryQueue) Enqueue(job Job) error {
+	// Check if queue is stopped first
+	select {
+	case <-q.ctx.Done():
+		return fmt.Errorf("queue is stopped")
+	default:
+	}
+
+	// Try to enqueue
 	select {
 	case q.jobs <- job:
 		return nil
-	case <-q.ctx.Done():
-		return fmt.Errorf("queue is stopped")
 	default:
 		return fmt.Errorf("queue is full")
 	}

@@ -102,7 +102,7 @@ function WidgetPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="mx-auto">
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Left Column - Configuration Form */}
         <WidgetConfigForm

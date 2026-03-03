@@ -1,12 +1,9 @@
-import {
-  queryOptions,
-  useMutation,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { CreditCard, Loader2 } from "lucide-react";
 import { api } from "@/api";
+import { billingUsageQueryOptions } from "@/api/queries";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -18,20 +15,15 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 
-const usageQueryOptions = queryOptions({
-  queryKey: ["billing-usage"],
-  queryFn: () => api.billing.usage(),
-});
-
 export const Route = createFileRoute("/dashboard/billing/usage")({
   component: BillingUsagePage,
   loader: ({ context }) => {
-    return context.queryClient.ensureQueryData(usageQueryOptions);
+    return context.queryClient.ensureQueryData(billingUsageQueryOptions);
   },
 });
 
 function BillingUsagePage() {
-  const { data } = useSuspenseQuery(usageQueryOptions);
+  const { data } = useSuspenseQuery(billingUsageQueryOptions);
 
   const portalMutation = useMutation({
     mutationFn: () => api.billing.portal(),

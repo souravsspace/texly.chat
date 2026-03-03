@@ -11,6 +11,7 @@ interface AuthState {
   logout: () => void;
   setUser: (user: User) => void;
   initializeAuth: () => Promise<void>;
+  refetchUser: () => Promise<void>;
 }
 
 const TOKEN_COOKIE_NAME = "auth_token";
@@ -20,6 +21,12 @@ const COOKIE_OPTIONS = {
   secure: process.env.NODE_ENV === "production",
 };
 
+/**
+ * Auth store for managing authentication state
+ *
+ * Note: User data is also managed by TanStack Query (see api/queries.ts)
+ * for better caching and automatic refetching on window focus.
+ */
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   token: null,
@@ -54,6 +61,19 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
     } else {
       set({ loading: false });
+    }
+  },
+
+  refetchUser: async () => {
+    const savedToken = Cookies.get(TOKEN_COOKIE_NAME);
+
+    if (savedToken) {
+      try {
+        const user = await api.users.getMe();
+        set({ user });
+      } catch (_error) {
+        // Silently fail - user might have logged out
+      }
     }
   },
 }));

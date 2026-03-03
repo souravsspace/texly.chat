@@ -9,12 +9,14 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PricingIndexRouteImport } from './routes/pricing/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settings'
 import { Route as AuthSignupRouteImport } from './routes/_auth/signup'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
+import { Route as DashboardBillingIndexRouteImport } from './routes/dashboard/billing/index'
 import { Route as DashboardBotsBotIdRouteImport } from './routes/dashboard/bots/$botId'
 import { Route as DashboardBillingUsageRouteImport } from './routes/dashboard/billing/usage'
 import { Route as DashboardBillingSubscriptionRouteImport } from './routes/dashboard/billing/subscription'
@@ -24,6 +26,11 @@ import { Route as DashboardBotsBotIdConfigureRouteImport } from './routes/dashbo
 import { Route as DashboardBotsBotIdChatRouteImport } from './routes/dashboard/bots/$botId/chat'
 import { Route as DashboardBotsBotIdAnalyticsRouteImport } from './routes/dashboard/bots/$botId/analytics'
 
+const DashboardRouteRoute = DashboardRouteRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -35,14 +42,14 @@ const PricingIndexRoute = PricingIndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
-  id: '/dashboard/',
-  path: '/dashboard/',
-  getParentRoute: () => rootRouteImport,
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRouteRoute,
 } as any)
 const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
-  id: '/dashboard/settings',
-  path: '/dashboard/settings',
-  getParentRoute: () => rootRouteImport,
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => DashboardRouteRoute,
 } as any)
 const AuthSignupRoute = AuthSignupRouteImport.update({
   id: '/_auth/signup',
@@ -54,21 +61,26 @@ const AuthLoginRoute = AuthLoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardBillingIndexRoute = DashboardBillingIndexRouteImport.update({
+  id: '/billing/',
+  path: '/billing/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardBotsBotIdRoute = DashboardBotsBotIdRouteImport.update({
-  id: '/dashboard/bots/$botId',
-  path: '/dashboard/bots/$botId',
-  getParentRoute: () => rootRouteImport,
+  id: '/bots/$botId',
+  path: '/bots/$botId',
+  getParentRoute: () => DashboardRouteRoute,
 } as any)
 const DashboardBillingUsageRoute = DashboardBillingUsageRouteImport.update({
-  id: '/dashboard/billing/usage',
-  path: '/dashboard/billing/usage',
-  getParentRoute: () => rootRouteImport,
+  id: '/billing/usage',
+  path: '/billing/usage',
+  getParentRoute: () => DashboardRouteRoute,
 } as any)
 const DashboardBillingSubscriptionRoute =
   DashboardBillingSubscriptionRouteImport.update({
-    id: '/dashboard/billing/subscription',
-    path: '/dashboard/billing/subscription',
-    getParentRoute: () => rootRouteImport,
+    id: '/billing/subscription',
+    path: '/billing/subscription',
+    getParentRoute: () => DashboardRouteRoute,
   } as any)
 const AuthAuthCallbackRoute = AuthAuthCallbackRouteImport.update({
   id: '/_auth/auth/callback',
@@ -101,6 +113,7 @@ const DashboardBotsBotIdAnalyticsRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRouteRouteWithChildren
   '/login': typeof AuthLoginRoute
   '/signup': typeof AuthSignupRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
@@ -110,6 +123,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/billing/subscription': typeof DashboardBillingSubscriptionRoute
   '/dashboard/billing/usage': typeof DashboardBillingUsageRoute
   '/dashboard/bots/$botId': typeof DashboardBotsBotIdRouteWithChildren
+  '/dashboard/billing/': typeof DashboardBillingIndexRoute
   '/dashboard/bots/$botId/analytics': typeof DashboardBotsBotIdAnalyticsRoute
   '/dashboard/bots/$botId/chat': typeof DashboardBotsBotIdChatRoute
   '/dashboard/bots/$botId/configure': typeof DashboardBotsBotIdConfigureRoute
@@ -126,6 +140,7 @@ export interface FileRoutesByTo {
   '/dashboard/billing/subscription': typeof DashboardBillingSubscriptionRoute
   '/dashboard/billing/usage': typeof DashboardBillingUsageRoute
   '/dashboard/bots/$botId': typeof DashboardBotsBotIdRouteWithChildren
+  '/dashboard/billing': typeof DashboardBillingIndexRoute
   '/dashboard/bots/$botId/analytics': typeof DashboardBotsBotIdAnalyticsRoute
   '/dashboard/bots/$botId/chat': typeof DashboardBotsBotIdChatRoute
   '/dashboard/bots/$botId/configure': typeof DashboardBotsBotIdConfigureRoute
@@ -134,6 +149,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRouteRouteWithChildren
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/signup': typeof AuthSignupRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
@@ -143,6 +159,7 @@ export interface FileRoutesById {
   '/dashboard/billing/subscription': typeof DashboardBillingSubscriptionRoute
   '/dashboard/billing/usage': typeof DashboardBillingUsageRoute
   '/dashboard/bots/$botId': typeof DashboardBotsBotIdRouteWithChildren
+  '/dashboard/billing/': typeof DashboardBillingIndexRoute
   '/dashboard/bots/$botId/analytics': typeof DashboardBotsBotIdAnalyticsRoute
   '/dashboard/bots/$botId/chat': typeof DashboardBotsBotIdChatRoute
   '/dashboard/bots/$botId/configure': typeof DashboardBotsBotIdConfigureRoute
@@ -152,6 +169,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/dashboard'
     | '/login'
     | '/signup'
     | '/dashboard/settings'
@@ -161,6 +179,7 @@ export interface FileRouteTypes {
     | '/dashboard/billing/subscription'
     | '/dashboard/billing/usage'
     | '/dashboard/bots/$botId'
+    | '/dashboard/billing/'
     | '/dashboard/bots/$botId/analytics'
     | '/dashboard/bots/$botId/chat'
     | '/dashboard/bots/$botId/configure'
@@ -177,6 +196,7 @@ export interface FileRouteTypes {
     | '/dashboard/billing/subscription'
     | '/dashboard/billing/usage'
     | '/dashboard/bots/$botId'
+    | '/dashboard/billing'
     | '/dashboard/bots/$botId/analytics'
     | '/dashboard/bots/$botId/chat'
     | '/dashboard/bots/$botId/configure'
@@ -184,6 +204,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/dashboard'
     | '/_auth/login'
     | '/_auth/signup'
     | '/dashboard/settings'
@@ -193,6 +214,7 @@ export interface FileRouteTypes {
     | '/dashboard/billing/subscription'
     | '/dashboard/billing/usage'
     | '/dashboard/bots/$botId'
+    | '/dashboard/billing/'
     | '/dashboard/bots/$botId/analytics'
     | '/dashboard/bots/$botId/chat'
     | '/dashboard/bots/$botId/configure'
@@ -201,19 +223,22 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
   AuthLoginRoute: typeof AuthLoginRoute
   AuthSignupRoute: typeof AuthSignupRoute
-  DashboardSettingsRoute: typeof DashboardSettingsRoute
-  DashboardIndexRoute: typeof DashboardIndexRoute
   PricingIndexRoute: typeof PricingIndexRoute
   AuthAuthCallbackRoute: typeof AuthAuthCallbackRoute
-  DashboardBillingSubscriptionRoute: typeof DashboardBillingSubscriptionRoute
-  DashboardBillingUsageRoute: typeof DashboardBillingUsageRoute
-  DashboardBotsBotIdRoute: typeof DashboardBotsBotIdRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -230,17 +255,17 @@ declare module '@tanstack/react-router' {
     }
     '/dashboard/': {
       id: '/dashboard/'
-      path: '/dashboard'
+      path: '/'
       fullPath: '/dashboard/'
       preLoaderRoute: typeof DashboardIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/settings': {
       id: '/dashboard/settings'
-      path: '/dashboard/settings'
+      path: '/settings'
       fullPath: '/dashboard/settings'
       preLoaderRoute: typeof DashboardSettingsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardRouteRoute
     }
     '/_auth/signup': {
       id: '/_auth/signup'
@@ -256,26 +281,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/billing/': {
+      id: '/dashboard/billing/'
+      path: '/billing'
+      fullPath: '/dashboard/billing/'
+      preLoaderRoute: typeof DashboardBillingIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/bots/$botId': {
       id: '/dashboard/bots/$botId'
-      path: '/dashboard/bots/$botId'
+      path: '/bots/$botId'
       fullPath: '/dashboard/bots/$botId'
       preLoaderRoute: typeof DashboardBotsBotIdRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/billing/usage': {
       id: '/dashboard/billing/usage'
-      path: '/dashboard/billing/usage'
+      path: '/billing/usage'
       fullPath: '/dashboard/billing/usage'
       preLoaderRoute: typeof DashboardBillingUsageRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/billing/subscription': {
       id: '/dashboard/billing/subscription'
-      path: '/dashboard/billing/subscription'
+      path: '/billing/subscription'
       fullPath: '/dashboard/billing/subscription'
       preLoaderRoute: typeof DashboardBillingSubscriptionRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardRouteRoute
     }
     '/_auth/auth/callback': {
       id: '/_auth/auth/callback'
@@ -332,17 +364,35 @@ const DashboardBotsBotIdRouteChildren: DashboardBotsBotIdRouteChildren = {
 const DashboardBotsBotIdRouteWithChildren =
   DashboardBotsBotIdRoute._addFileChildren(DashboardBotsBotIdRouteChildren)
 
-const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  AuthLoginRoute: AuthLoginRoute,
-  AuthSignupRoute: AuthSignupRoute,
+interface DashboardRouteRouteChildren {
+  DashboardSettingsRoute: typeof DashboardSettingsRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardBillingSubscriptionRoute: typeof DashboardBillingSubscriptionRoute
+  DashboardBillingUsageRoute: typeof DashboardBillingUsageRoute
+  DashboardBotsBotIdRoute: typeof DashboardBotsBotIdRouteWithChildren
+  DashboardBillingIndexRoute: typeof DashboardBillingIndexRoute
+}
+
+const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
-  PricingIndexRoute: PricingIndexRoute,
-  AuthAuthCallbackRoute: AuthAuthCallbackRoute,
   DashboardBillingSubscriptionRoute: DashboardBillingSubscriptionRoute,
   DashboardBillingUsageRoute: DashboardBillingUsageRoute,
   DashboardBotsBotIdRoute: DashboardBotsBotIdRouteWithChildren,
+  DashboardBillingIndexRoute: DashboardBillingIndexRoute,
+}
+
+const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
+  DashboardRouteRouteChildren,
+)
+
+const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
+  DashboardRouteRoute: DashboardRouteRouteWithChildren,
+  AuthLoginRoute: AuthLoginRoute,
+  AuthSignupRoute: AuthSignupRoute,
+  PricingIndexRoute: PricingIndexRoute,
+  AuthAuthCallbackRoute: AuthAuthCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

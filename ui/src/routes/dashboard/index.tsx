@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { api } from "@/api";
-import { Header } from "@/components/layout/header";
 import { UpgradeModal } from "@/components/modals/upgrade-modal";
 import { Button } from "@/components/ui/button";
 import { useCreateBotDialog } from "@/hooks/use-create-bot-dialog";
@@ -77,11 +76,9 @@ function Dashboard() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-      <Header />
-
+    <div>
       {botsError && (
-        <div className="mb-6 rounded-lg border border-destructive bg-destructive/15 px-4 py-3 text-destructive text-sm">
+        <div className="mb-6 border border-destructive bg-destructive/15 px-4 py-3 text-destructive text-sm">
           Failed to load bots
         </div>
       )}

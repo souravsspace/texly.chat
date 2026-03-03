@@ -1,6 +1,7 @@
 import Cookies from "js-cookie";
 import type {
   AuthResponse,
+  BillingUsageResponse,
   Bot,
   BotAnalytics,
   ChatTokenResponse,
@@ -42,8 +43,10 @@ class ApiClient {
     if (!response.ok) {
       const error = await response
         .json()
-        .catch(() => ({ message: "Request failed" }));
-      throw new Error(error.message || `HTTP ${response.status}`);
+        .catch(() => ({ error: "Request failed" }));
+      throw new Error(
+        error.error || error.message || `HTTP ${response.status}`
+      );
     }
 
     if (response.status === 204) {
@@ -271,7 +274,7 @@ class ApiClient {
   };
 
   billing = {
-    usage: () => this.request<User>("/billing/usage"),
+    usage: () => this.request<BillingUsageResponse>("/billing/usage"),
 
     checkout: (tier = "pro") =>
       this.request<{ url: string }>("/billing/checkout", {
@@ -279,10 +282,7 @@ class ApiClient {
         body: JSON.stringify({ tier }),
       }),
 
-    portal: () =>
-      this.request<{ url: string }>("/billing/portal", {
-        method: "POST",
-      }),
+    portal: () => this.request<{ url: string }>("/billing/portal"),
   };
 }
 

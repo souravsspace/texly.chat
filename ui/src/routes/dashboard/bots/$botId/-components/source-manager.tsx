@@ -13,7 +13,7 @@ export function SourceManager({ botId }: { botId: string }) {
 
   return (
     <Card>
-      <CardContent className="p-6">
+      <CardContent className="py-6">
         <Tabs className="w-full" onValueChange={setActiveTab} value={activeTab}>
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger className="gap-2" value="list">

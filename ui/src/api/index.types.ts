@@ -11,6 +11,17 @@ export interface Subscription {
 }
 
 /*
+ * BillingUsageResponse represents the billing usage information returned to the frontend
+ */
+export interface BillingUsageResponse {
+  credits_balance: number;
+  credits_allocated: number;
+  current_period_usage: number;
+  tier: string;
+  billing_cycle_end: string | Date;
+}
+
+/*
  * WidgetConfig holds configuration for the embeddable widget
  */
 export interface WidgetConfig {

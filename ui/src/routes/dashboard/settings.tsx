@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Icons } from "@/components/icons";
-import { Header } from "@/components/layout/header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -32,12 +31,7 @@ function SettingsPage() {
     user?.auth_provider === "google" || !!user?.google_id;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-      <Header
-        description="Manage your account settings and preferences."
-        title="Settings"
-      />
-
+    <div>
       <div className="space-y-6">
         <Card>
           <CardHeader>

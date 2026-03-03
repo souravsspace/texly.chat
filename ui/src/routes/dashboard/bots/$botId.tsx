@@ -29,7 +29,7 @@ function BotLayout() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto max-w-6xl space-y-6 py-8">
+      <div className="container mx-auto space-y-6 py-8">
         <Skeleton className="h-6 w-64" />
         <div className="space-y-4">
           <Skeleton className="h-10 w-full" />
@@ -41,7 +41,7 @@ function BotLayout() {
 
   if (!bot) {
     return (
-      <div className="container mx-auto max-w-6xl py-8">
+      <div className="container mx-auto py-8">
         <Card>
           <CardContent className="flex h-[50vh] items-center justify-center">
             <div className="space-y-2 text-center">
@@ -58,7 +58,7 @@ function BotLayout() {
   const description = getPageDescription(currentPath);
 
   return (
-    <div className="container mx-auto max-w-6xl space-y-6 py-8">
+    <div className="container mx-auto space-y-6">
       {/* Breadcrumb Navigation */}
       <Breadcrumb>
         <BreadcrumbList>

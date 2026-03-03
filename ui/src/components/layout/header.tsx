@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { LogOut, Settings } from "lucide-react";
+import { CreditCard, LayoutDashboard, LogOut, Settings } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -79,10 +79,30 @@ export function Header({ title = "Dashboard", description }: HeaderProps) {
                 <DropdownMenuItem>
                   <Link
                     className="flex w-full cursor-pointer items-center"
+                    to="/dashboard"
+                  >
+                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                    <span>Dashboard</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />{" "}
+                <DropdownMenuItem>
+                  <Link
+                    className="flex w-full cursor-pointer items-center"
                     to="/dashboard/settings"
                   >
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <Link
+                    className="flex w-full cursor-pointer items-center"
+                    to="/dashboard/billing/subscription"
+                  >
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    <span>Billing</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />

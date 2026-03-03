@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/souravsspace/texly.chat/internal/models"
 	"github.com/souravsspace/texly.chat/internal/repo/user"
 	"github.com/souravsspace/texly.chat/internal/services/billing/polar"
 	"github.com/souravsspace/texly.chat/internal/services/billing/usage"
@@ -95,13 +96,16 @@ func (h *CheckoutHandler) GetUsage(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"credits_balance":      user.CreditsBalance,
-		"credits_allocated":    user.CreditsAllocated,
-		"current_period_usage": currentUsage,
-		"tier":                 user.Tier,
-		"billing_cycle_end":    user.BillingCycleEnd,
-	})
+	// Return structured response using BillingUsageResponse model
+	response := models.BillingUsageResponse{
+		CreditsBalance:     user.CreditsBalance,
+		CreditsAllocated:   user.CreditsAllocated,
+		CurrentPeriodUsage: currentUsage,
+		Tier:               user.Tier,
+		BillingCycleEnd:    user.BillingCycleEnd,
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 // PayUsage handles POST /api/billing/pay-usage

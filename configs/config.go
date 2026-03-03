@@ -89,7 +89,7 @@ func Load() Config {
 		PolarOrganizationID:   getEnv("POLAR_ORGANIZATION_ID", false),
 		PolarProProductID:     getEnv("POLAR_PRO_PRODUCT_ID", false),
 		PolarCreditsProductID: getEnv("POLAR_CREDITS_PRODUCT_ID", false),
-		PolarServerURL:        getEnv("POLAR_SERVER_URL", false, "https://sandbox.polar.sh"),
+		PolarServerURL:        getEnv("POLAR_SERVER_URL", false, "https://sandbox-api.polar.sh"),
 	}
 }
 

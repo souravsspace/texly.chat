@@ -115,13 +115,14 @@ func TestInMemoryQueue_Stop(t *testing.T) {
 	queue.Start(ctx, handler)
 
 	// Enqueue some jobs
-	queue.Enqueue(Job{SourceID: "1", BotID: "bot-1", URL: "https://example.com"})
+	err := queue.Enqueue(Job{SourceID: "1", BotID: "bot-1", URL: "https://example.com"})
+	assert.NoError(t, err)
 
 	// Stop queue
 	queue.Stop()
 
 	// Try to enqueue after stop should fail
-	err := queue.Enqueue(Job{SourceID: "2", BotID: "bot-1", URL: "https://example.com"})
+	err = queue.Enqueue(Job{SourceID: "2", BotID: "bot-1", URL: "https://example.com"})
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "queue is stopped")
 }

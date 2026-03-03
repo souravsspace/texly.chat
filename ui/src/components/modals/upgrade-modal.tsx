@@ -23,7 +23,11 @@ export function UpgradeModal({
   onOpenChange,
   trigger,
 }: UpgradeModalProps) {
-  const { mutate: handleUpgrade, isPending } = useMutation({
+  const {
+    mutate: handleUpgrade,
+    isPending,
+    error,
+  } = useMutation({
     mutationFn: () => api.billing.checkout(),
     onSuccess: (data) => {
       if (data.url) {
@@ -82,6 +86,15 @@ export function UpgradeModal({
               /month
             </span>
           </div>
+
+          {error && (
+            <div className="rounded-lg bg-destructive/10 p-3 text-center text-destructive text-sm">
+              {error instanceof Error
+                ? error.message.split("<!DOCTYPE")[0].trim() ||
+                  "Failed to start checkout. Please try again."
+                : "Failed to start checkout. Please try again."}
+            </div>
+          )}
 
           <DialogFooter className="sm:justify-center">
             <Button

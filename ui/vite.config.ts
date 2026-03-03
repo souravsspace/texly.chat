@@ -29,6 +29,8 @@ const config = defineConfig({
     viteReact(),
   ],
   server: {
+    // remove on prd
+    allowedHosts: true,
     proxy: {
       "/api": {
         target: "http://localhost:8080",
